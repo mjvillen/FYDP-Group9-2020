@@ -27,12 +27,11 @@ void setup() {
 
 void loop() {
 
-  float measurements[3];
-  Serial.println(SensorOne.isStationary());
+  float displacement[3];
 
-  //SensorOne.getPitchYawRoll(measurements);
+  SensorOne.getDisplacement(displacement);
 
-  //Serial.print("Pitch: "); Serial.print(measurements[0]);
-  //Serial.print("\tYaw: "); Serial.print(measurements[1]);
-  //Serial.print("\tRoll: "); Serial.println(measurements[2]);
+  Serial.print("X: "); Serial.print(displacement[0]);
+  Serial.print("\tY: "); Serial.print(displacement[1]);
+  Serial.print("\tZ: "); Serial.println(displacement[2]);
 }

@@ -30,6 +30,7 @@ Distributed as-is; no warranty is given.
 #include "Arduino.h"
 #include "Wire.h"
 #include "SensorFusion.h"
+#include "utilities/imumaths.h"
 
 // Return values 
 typedef enum {
@@ -178,6 +179,7 @@ public:
 	float getRoll(void);
 	void getPitchYawRoll(float *measurments);
 	bool isStationary(void);
+	void getDisplacement(float *displacement);
 
 private:
 	SF fusion;

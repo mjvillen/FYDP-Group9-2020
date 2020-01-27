@@ -815,4 +815,66 @@ bool LSM6DS3::isStationary(void) {
 	// This is much simpler than the gait tracking example code which had a high and low pass
 	// filter on the acceleration. Not sure if we want the extra filtering, but I'll leave it 
 	// out for now.
-	}
+}
+
+void LSM6DS3::getDisplacement(float *displacement) {
+	gx = DEG_TO_RAD * readFloatGyroX();
+	gy = DEG_TO_RAD * readFloatGyroY();
+	gz = DEG_TO_RAD * readFloatGyroZ();
+	ax = readFloatAccelX();
+	ay = readFloatAccelY();
+	az = readFloatAccelZ();
+
+	deltat = fusion.deltatUpdate();
+	fusion.MahonyUpdate(gx, gy, gz, ax, ay, az, deltat);
+	imu::Quaternion quat = imu::Quaternion(fusion.q0, fusion.q1, fusion.q2, fusion.q3);
+
+	// TODO: figure out what goes on here
+	// if (isStationary()) {
+	// 		AHRSalgorithm.Kp = 0.5;
+	// } else {
+	//     AHRSalgorithm.Kp = 0;
+	// }
+
+	// TODO: Quaternion Rotate
+	// acc = quaternRotate([accX accY accZ], quaternConj(quat));
+
+	// TODO: Convert acceleration measurements to m/s/s
+	// acc = acc * 9.81;
+
+	// TODO: Compute translational velocities
+	// acc(:,3) = acc(:,3) - 9.81;
+	// % Integrate acceleration to yield velocity
+	// vel = zeros(size(acc));
+	// for t = 2:length(vel)
+	// 	vel(t,:) = vel(t-1,:) + acc(t,:) * samplePeriod;
+	// 	if(stationary(t) == 1)
+	// 		vel(t,:) = [0 0 0];     % force zero velocity when foot stationary
+	// 	end
+	// end
+
+	// TODO: Compute integral drift during non-stationary periods
+	// velDrift = zeros(size(vel));
+	// stationaryStart = find([0; diff(stationary)] == -1);
+	// stationaryEnd = find([0; diff(stationary)] == 1);
+	// for i = 1:numel(stationaryEnd)
+	// 	driftRate = vel(stationaryEnd(i)-1, :) / (stationaryEnd(i) - stationaryStart(i));
+	// 	enum = 1:(stationaryEnd(i) - stationaryStart(i));
+	// 	drift = [enum'*driftRate(1) enum'*driftRate(2) enum'*driftRate(3)];
+	// 	velDrift(stationaryStart(i):stationaryEnd(i)-1, :) = drift;
+	// end
+
+	// TODO: Remove integral drift
+	// vel = vel - velDrift;
+
+	// TODO: Compute translational position
+	// Integrate velocity to yield position
+	// pos = zeros(size(vel));
+	// for t = 2:length(pos)
+	// 	pos(t,:) = pos(t-1,:) + vel(t,:) * samplePeriod;    % integrate velocity to yield position
+	// end
+
+	displacement[0] = fusion.getPitch();
+	displacement[1] = fusion.getYaw();
+	displacement[2] = fusion.getRoll();
+}

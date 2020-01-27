@@ -48,6 +48,9 @@ SF::SF() {
 	integralFBy = 0.0f;
 	integralFBz = 0.0f;
 	anglesComputed = 0;
+	x = 0.0f;
+	y = 0.0f;
+	z = 0.0f;
 }
 
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root

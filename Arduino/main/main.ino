@@ -26,7 +26,12 @@ void setup() {
 
 
 void loop() {
-  Serial.print("Pitch: "); Serial.print(SensorOne.getPitch() - SensorTwo.getPitch());
-  Serial.print("\tRoll: "); Serial.print(SensorOne.getRoll() - SensorTwo.getRoll());
-  Serial.print("\tYaw: "); Serial.println(SensorOne.getYaw() - SensorTwo.getYaw());
+
+  float measurements[3];
+
+  SensorOne.getPitchYawRoll(measurements);
+
+  Serial.print("Pitch: "); Serial.print(measurements[0]);
+  Serial.print("\tYaw: "); Serial.print(measurements[1]);
+  Serial.print("\tRoll: "); Serial.println(measurements[2]);
 }

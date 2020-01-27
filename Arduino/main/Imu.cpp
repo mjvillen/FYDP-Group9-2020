@@ -787,3 +787,19 @@ float LSM6DS3::getRoll(void) {
 
 	return fusion.getRoll();
 }
+
+void LSM6DS3::getPitchYawRoll(float *measurements) {
+	gx = DEG_TO_RAD * readFloatGyroX();
+  	gy = DEG_TO_RAD * readFloatGyroY();
+  	gz = DEG_TO_RAD * readFloatGyroZ();
+  	ax = readFloatAccelX();
+  	ay = readFloatAccelY();
+  	az = readFloatAccelZ();
+
+  	deltat = fusion.deltatUpdate();
+  	fusion.MahonyUpdate(gx, gy, gz, ax, ay, az, deltat);
+
+	measurements[0] = fusion.getPitch();
+	measurements[1] = fusion.getYaw();
+	measurements[2] = fusion.getRoll();
+}

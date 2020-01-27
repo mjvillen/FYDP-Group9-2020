@@ -31,7 +31,6 @@ Distributed as-is; no warranty is given.
 #include "Wire.h"
 #include "SensorFusion.h"
 
-
 // Return values 
 typedef enum {
 	IMU_SUCCESS,
@@ -177,6 +176,7 @@ public:
 	float getPitch(void);
 	float getYaw(void);
 	float getRoll(void);
+	void getPitchYawRoll(float *measurments);
 
 private:
 	SF fusion;

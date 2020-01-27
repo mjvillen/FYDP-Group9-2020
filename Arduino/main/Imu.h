@@ -177,6 +177,7 @@ public:
 	float getYaw(void);
 	float getRoll(void);
 	void getPitchYawRoll(float *measurments);
+	bool isStationary(void);
 
 private:
 	SF fusion;

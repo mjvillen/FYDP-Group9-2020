@@ -803,3 +803,16 @@ void LSM6DS3::getPitchYawRoll(float *measurements) {
 	measurements[1] = fusion.getYaw();
 	measurements[2] = fusion.getRoll();
 }
+
+bool LSM6DS3::isStationary(void) {
+	ax = readFloatAccelX();
+  	ay = readFloatAccelY();
+  	az = readFloatAccelZ();
+
+	// TODO: May need to play with this value a bit, but it looks good for now.
+	return (abs(sqrt(ax*ax + ay*ay + az*az) - 1.023) > 0.01) ? false : true;
+
+	// This is much simpler than the gait tracking example code which had a high and low pass
+	// filter on the acceleration. Not sure if we want the extra filtering, but I'll leave it 
+	// out for now.
+	}

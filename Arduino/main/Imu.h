@@ -180,10 +180,12 @@ public:
 	void getPitchYawRoll(float *measurments);
 	bool isStationary(void);
 	void getDisplacement(float *displacement);
+	void resetIMU();
 
 private:
 	SF fusion;
 	float gx, gy, gz, ax, ay, az;
+	float vx, vy, vz, dx, dy, dz;
 	float deltat;
 };
 

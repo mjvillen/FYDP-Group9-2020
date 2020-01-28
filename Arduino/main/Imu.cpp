@@ -828,33 +828,40 @@ void LSM6DS3::getDisplacement(float *displacement) {
 	deltat = fusion.deltatUpdate();
 	fusion.MahonyUpdate(gx, gy, gz, ax, ay, az, deltat);
 	imu::Quaternion quat = imu::Quaternion(fusion.q0, fusion.q1, fusion.q2, fusion.q3);
+	imu::Vector<3> acc = imu::Vector<3>(ax, ay, az);
 
 	// TODO: figure out what goes on here
 	// if (isStationary()) {
+	//		My intuition here is to simply return the previous data... not sure why they modified this
 	// 		AHRSalgorithm.Kp = 0.5;
 	// } else {
 	//     AHRSalgorithm.Kp = 0;
 	// }
 
-	// TODO: Quaternion Rotate
-	// acc = quaternRotate([accX accY accZ], quaternConj(quat));
+	// Quaternion Rotate - Rotate the acceleraion vector by the conjugate
+	imu::Quaternion quatConj = quat.conjugate();
+	acc = quatConj.rotateVector(acc);
 
-	// TODO: Convert acceleration measurements to m/s/s
-	// acc = acc * 9.81;
+	// Convert acceleration measurements to m/s/s
+	acc = acc * 9.81;
 
-	// TODO: Compute translational velocities
-	// acc(:,3) = acc(:,3) - 9.81;
-	// % Integrate acceleration to yield velocity
-	// vel = zeros(size(acc));
-	// for t = 2:length(vel)
-	// 	vel(t,:) = vel(t-1,:) + acc(t,:) * samplePeriod;
-	// 	if(stationary(t) == 1)
-	// 		vel(t,:) = [0 0 0];     % force zero velocity when foot stationary
-	// 	end
-	// end
+	// Compute translational velocities
+	acc = imu::Vector<3>(acc.x(), acc.y(), acc.z() - 9.81); // Would love to find a way not to re-instantiate here
+
+	// Integrate acceleration to yield velocity
+	if (isStationary()) {
+		vx = 0;
+		vy = 0;
+		vz = 0;
+	} else {
+		vx = vx + (acc.x() * deltat);
+		vy = vy + (acc.y() * deltat);
+		vz = vz + (acc.z() * deltat);
+	}
+	imu::Vector<3> vel = imu::Vector<3>(vx, vy, vz);
 
 	// TODO: Compute integral drift during non-stationary periods
-	// velDrift = zeros(size(vel));
+	// imu::Vector<3> velDrift = imu::Vector<3>(0, 0, 0);
 	// stationaryStart = find([0; diff(stationary)] == -1);
 	// stationaryEnd = find([0; diff(stationary)] == 1);
 	// for i = 1:numel(stationaryEnd)
@@ -867,14 +874,26 @@ void LSM6DS3::getDisplacement(float *displacement) {
 	// TODO: Remove integral drift
 	// vel = vel - velDrift;
 
-	// TODO: Compute translational position
+	// Compute translational position
 	// Integrate velocity to yield position
-	// pos = zeros(size(vel));
-	// for t = 2:length(pos)
-	// 	pos(t,:) = pos(t-1,:) + vel(t,:) * samplePeriod;    % integrate velocity to yield position
-	// end
+	dx = dx + (vx * deltat);
+	dy = dy + (vy * deltat);
+	dz = dz + (vz * deltat);
 
-	displacement[0] = fusion.getPitch();
-	displacement[1] = fusion.getYaw();
-	displacement[2] = fusion.getRoll();
+	Serial.print("X: "); Serial.print(dx,5);
+	Serial.print("\tY: "); Serial.print(dy,5);
+	Serial.print("\tZ: "); Serial.println(dz,5);
+
+	displacement[0] = dx;
+	displacement[1] = dy;
+	displacement[2] = dz;
+}
+
+void LSM6DS3::resetIMU() {
+	vx = 0;
+	vy = 0;
+	vz = 0;
+	dx = 0;
+	dy = 0;
+	dz = 0;
 }

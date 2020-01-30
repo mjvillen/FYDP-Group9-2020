@@ -809,12 +809,12 @@ bool LSM6DS3::isStationary(void) {
   	ay = readFloatAccelY();
   	az = readFloatAccelZ();
 
-	// TODO: May need to play with this value a bit, but it looks good for now.
-	return (abs(sqrt(ax*ax + ay*ay + az*az) - 1.023) > 0.01) ? false : true;
+	float acc_mag = sqrt(ax*ax + ay*ay + az*az);
 
-	// This is much simpler than the gait tracking example code which had a high and low pass
-	// filter on the acceleration. Not sure if we want the extra filtering, but I'll leave it 
-	// out for now.
+	// TODO: Filter accelerometer data
+
+	// TODO: May need to play with this value a bit, but it looks good for now.
+	return (abs(acc_mag - 1.023) > 0.01) ? false : true;
 }
 
 void LSM6DS3::getDisplacement(float *displacement) {
@@ -828,7 +828,6 @@ void LSM6DS3::getDisplacement(float *displacement) {
 	deltat = fusion.deltatUpdate();
 	fusion.MahonyUpdate(gx, gy, gz, ax, ay, az, deltat);
 	imu::Quaternion quat = imu::Quaternion(fusion.q0, fusion.q1, fusion.q2, fusion.q3);
-	imu::Vector<3> acc = imu::Vector<3>(ax, ay, az);
 
 	// TODO: figure out what goes on here
 	// if (isStationary()) {
@@ -839,11 +838,12 @@ void LSM6DS3::getDisplacement(float *displacement) {
 	// }
 
 	// Quaternion Rotate - Rotate the acceleraion vector by the conjugate
+	imu::Vector<3> acc = imu::Vector<3>(ax, ay, az);
 	imu::Quaternion quatConj = quat.conjugate();
 	acc = quatConj.rotateVector(acc);
 
 	// Convert acceleration measurements to m/s/s
-	acc = acc * 9.81;
+	acc = acc.scale(9.81);
 
 	// Compute translational velocities
 	acc = imu::Vector<3>(acc.x(), acc.y(), acc.z() - 9.81); // Would love to find a way not to re-instantiate here
@@ -880,9 +880,6 @@ void LSM6DS3::getDisplacement(float *displacement) {
 	dy = dy + (vy * deltat);
 	dz = dz + (vz * deltat);
 
-	Serial.print("X: "); Serial.print(dx,5);
-	Serial.print("\tY: "); Serial.print(dy,5);
-	Serial.print("\tZ: "); Serial.println(dz,5);
 
 	displacement[0] = dx;
 	displacement[1] = dy;

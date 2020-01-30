@@ -227,6 +227,13 @@ public:
         return v + t*_w + qv.cross(t);
     }
 
+    Vector<3> quaternRotate(const Vector<3>& v) const
+    {
+        Quaternion q(_w, _x, _y, _z);
+        Quaternion vq(0, v.x(), v.y(), v.z());
+        Quaternion v0XYZ = ((q * vq) * q.conjugate());
+        return Vector<3> (v0XYZ.x(), v0XYZ.y(), v0XYZ.z());
+    }
 
     Quaternion operator*(const Quaternion& q) const
     {

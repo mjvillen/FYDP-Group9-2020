@@ -32,11 +32,7 @@ public:
 	
 	void MahonyUpdate(float gx, float gy, float gz, float ax, float ay, float az, float deltat);
 	
-	//these values are already defined by arduino
-	//const float DEG_TO_RAD = 0.0174532925199433f; //PI/180.0f;	
-	//const float RAD_TO_DEG = 57.29577951308233f; //180.0f/PI
-	
-	float deltatUpdate (){
+	float deltatUpdate () {
 		Now = micros();
 		deltat = ((Now - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
 		lastUpdate = Now;
@@ -77,7 +73,7 @@ private:
 	void computeAngles();
 	float roll, pitch, yaw;
 	float Now,lastUpdate,deltat;
-	float x, y, z;
+	float x, y, z, w;
 	
 };
 

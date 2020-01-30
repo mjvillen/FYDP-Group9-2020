@@ -51,6 +51,7 @@ SF::SF() {
 	x = 0.0f;
 	y = 0.0f;
 	z = 0.0f;
+	w = 0.0f;
 }
 
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
@@ -67,9 +68,14 @@ float SF::invSqrt(float x) {
 
 //-------------------------------------------------------------------------------------------
 void SF::computeAngles() {
-	roll = atan2f(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2);
-	pitch = asinf(-2.0f * (q1*q3 - q0*q2));
-	yaw = atan2f(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3);
+	// roll = atan2f(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2);
+	// pitch = asinf(-2.0f * (q1*q3 - q0*q2));
+	// yaw = atan2f(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3);
+
+	roll = atan2f(2*y*w - 2*x*z, 1 - 2*y*y - 2*z*z);
+	pitch = atan2f(2*x*w - 2*y*z, 1 - 2*x*x - 2*z*z);
+	yaw =  asinf(2*x*y + 2*z*w);
+
 	anglesComputed = 1;
 }
 
@@ -144,4 +150,9 @@ void SF::MahonyUpdate(float gx, float gy, float gz, float ax, float ay, float az
 	q2 *= recipNorm;
 	q3 *= recipNorm;
 	anglesComputed = 0;
+
+	w = q0;
+	x = q1;
+	y = q2;
+	z = q3;
 }

@@ -1,37 +1,74 @@
-#include "Imu.h"
-#include "Wire.h"
+#include <Wire.h>
+#include "Adafruit_Sensor.h"
+#include "Adafruit_BNO055.h"
 
-LSM6DS3 SensorOne(0x6A);
-LSM6DS3 SensorTwo(0x6B);
+double xPos = 0, yPos = 0, zPos = 0, headingVel = 0;
+uint16_t BNO055_SAMPLERATE_DELAY_MS = 10; //how often to read data from the board
+uint16_t PRINT_DELAY_MS = 500; // how often to print the data
+uint16_t printCount = 0; //counter to avoid printing every 10MS sample
 
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
-  delay(1000); //relax...
-  Serial.println("Processor came out of reset.\n");
-  
-  //Call .begin() to configure the IMUs
-  if(SensorOne.begin() != 0) {
-	  Serial.println("Problem starting the sensor at 0x6A.");
-  } else {
-	  Serial.println("Sensor at 0x6A started.");
+//velocity = accel*dt (dt in seconds)
+//position = 0.5*accel*dt^2
+double ACCEL_VEL_TRANSITION =  (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
+double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
+double DEG_2_RAD = 0.01745329251; //trig functions require radians, BNO055 outputs degrees
+
+// Check I2C device address and correct line below (by default address is 0x29 or 0x28)
+//                                   id, address
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+
+void setup(void)
+{
+  Serial.begin(115200);
+  if (!bno.begin())
+  {
+    Serial.print("No BNO055 detected");
+    while (1);
   }
 
-  if(SensorTwo.begin() != 0) {
-	  Serial.println("Problem starting the sensor at 0x6B.");
-  } else {
-	  Serial.println("Sensor at 0x6B started.");
-  }
+
+  delay(1000);
 }
 
+void loop(void)
+{
+  //
+  unsigned long tStart = micros();
+  sensors_event_t orientationData , linearAccelData;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  //  bno.getEvent(&angVelData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+  bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
 
-void loop() {
+  xPos = xPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.x;
+  yPos = yPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.y;
+  zPos = zPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.z;
 
-  float displacement[3];
+  // velocity of sensor in the direction it's facing
+  headingVel = ACCEL_VEL_TRANSITION * linearAccelData.acceleration.x / cos(DEG_2_RAD * orientationData.orientation.x);
 
-  SensorOne.getDisplacement(displacement);
+  if (printCount * BNO055_SAMPLERATE_DELAY_MS >= PRINT_DELAY_MS) {
+    //enough iterations have passed that we can print the latest data
+    Serial.print("Heading: ");
+    Serial.println(orientationData.orientation.x);
+    Serial.print("Position: ");
+    Serial.print(xPos);
+    Serial.print(" , ");
+    Serial.print(yPos);
+    Serial.print(" , ");
+    Serial.println(zPos);
+    Serial.print("Speed: ");
+    Serial.println(headingVel);
+    Serial.println("-------");
 
-  // Serial.print("X: "); Serial.print(displacement[0]);
-  // Serial.print("\tY: "); Serial.print(displacement[1]);
-  // Serial.print("\tZ: "); Serial.println(displacement[2]);
+    printCount = 0;
+  }
+  else {
+    printCount = printCount + 1;
+  }
+
+
+  while ((micros() - tStart) < (BNO055_SAMPLERATE_DELAY_MS * 1000))
+  {
+    //poll until the next sample is ready
+  }
 }

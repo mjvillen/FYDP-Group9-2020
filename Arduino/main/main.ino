@@ -17,21 +17,17 @@ double DEG_2_RAD = 0.01745329251; //trig functions require radians, BNO055 outpu
 //                                   id, address
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
-void setup(void)
-{
+void setup(void) {
   Serial.begin(115200);
-  if (!bno.begin())
-  {
+  if (!bno.begin()) {
     Serial.print("No BNO055 detected");
     while (1);
   }
 
-
   delay(1000);
 }
 
-void loop(void)
-{
+void loop(void) {
   //
   unsigned long tStart = micros();
   sensors_event_t orientationData , linearAccelData;
@@ -67,8 +63,7 @@ void loop(void)
   }
 
 
-  while ((micros() - tStart) < (BNO055_SAMPLERATE_DELAY_MS * 1000))
-  {
+  while ((micros() - tStart) < (BNO055_SAMPLERATE_DELAY_MS * 1000)) {
     //poll until the next sample is ready
   }
 }

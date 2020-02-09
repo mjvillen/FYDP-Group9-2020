@@ -46,20 +46,20 @@ void loop(void) {
   // imu::Quaternion quatConj = quat.conjugate();
   // imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
 
-  xAcc = (abs(linearAccelData.acceleration.x - avgX) > 0.2) ? linearAccelData.acceleration.x - avgX: 0;
-  yAcc = (abs(linearAccelData.acceleration.y - avgY) > 0.2) ? linearAccelData.acceleration.y - avgY: 0;
+  xAcc = (abs(linearAccelData.acceleration.x - avgX) > 0.2) ? linearAccelData.acceleration.x - avgX : 0;
+  yAcc = (abs(linearAccelData.acceleration.y - avgY) > 0.2) ? linearAccelData.acceleration.y - avgY : 0;
   zAcc = (abs(linearAccelData.acceleration.z - avgZ) > 0.2) ? linearAccelData.acceleration.z - avgZ : 0;
 
   xVel = xVel + xAcc * deltaT;
   yVel = yVel + yAcc * deltaT;
   zVel = zVel + zAcc * deltaT;
-  xVel = (abs(xVel) > 0.1) ? xVel: 0;
-  yVel = (abs(yVel) > 0.1) ? yVel: 0;
+  xVel = (abs(xVel) > 0.1) ? xVel : 0;
+  yVel = (abs(yVel) > 0.1) ? yVel : 0;
   zVel = (abs(zVel) > 0.1) ? zVel : 0;
 
-  xPos = xPos + (xVel * deltaT) + (0.5 * xAcc * (deltaT * deltaT));
-  yPos = yPos + (yVel * deltaT) + (0.5 * yAcc * (deltaT * deltaT));
-  zPos = zPos + (zVel * deltaT) + (0.5 * zAcc * (deltaT * deltaT));
+  xPos = xPos + (xVel * deltaT);
+  yPos = yPos + (yVel * deltaT);
+  zPos = zPos + (zVel * deltaT);
 
   // velocity of sensor in the direction it's facing
   // headingVel = (0.5 * deltaT * deltaT) * linearAccelData.acceleration.x / cos(DEG_2_RAD * orientationData.orientation.x);

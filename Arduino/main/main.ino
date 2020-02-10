@@ -21,10 +21,19 @@ const double DELTA_T =  (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 //                            cutoffFrequency/samplingFrequency
-HighPassFilter highPassFilter(0.002 / (1000/BNO055_SAMPLERATE_DELAY_MS));
+HighPassFilter highPassFilter_ax(0.1 / (1000/BNO055_SAMPLERATE_DELAY_MS));
+HighPassFilter highPassFilter_ay(0.1 / (1000/BNO055_SAMPLERATE_DELAY_MS));
+HighPassFilter highPassFilter_az(0.1 / (1000/BNO055_SAMPLERATE_DELAY_MS));
+HighPassFilter highPassFilter_vx(0.1 / (1000/BNO055_SAMPLERATE_DELAY_MS));
+HighPassFilter highPassFilter_vy(0.1 / (1000/BNO055_SAMPLERATE_DELAY_MS));
+HighPassFilter highPassFilter_vz(0.1 / (1000/BNO055_SAMPLERATE_DELAY_MS));
+
+FilterBuHp2 buttHigh1 = FilterBuHp2();
+FilterBuHp2 buttHigh2 = FilterBuHp2();
+FilterBuHp2 buttHigh3 = FilterBuHp2();
 
 void setup(void) {
-  Serial.begin(9600);
+  Serial.begin(115200);
   if (!bno.begin()) {
     Serial.print("No BNO055 detected");
     while (1);
@@ -33,32 +42,29 @@ void setup(void) {
   bno.calibrate();
   bno.setExtCrystalUse(true);
 
-  delay(2000);
+  // delay(2000);
 
   calibrateAccelerations();
 
-  delay(2000);
+  // delay(2000);
 }
 
 void loop(void) {
   unsigned long tStart = micros();
   sensors_event_t orientationData, linearAccelData, accelData;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+  bno.getEvent(&accelData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+  imu::Quaternion quat = bno.getQuat();
+  imu::Quaternion quatConj = quat.conjugate();
+  imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
 
-  // This is the quaternion math way. It should be similar to the linear acceleration so leaving in comments for now
-  // bno.getEvent(&accelData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-  // imu::Quaternion quat = bno.getQuat();
-  // imu::Quaternion quatConj = quat.conjugate();
-  // imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
+  xAcc = Accel.x();
+  yAcc = Accel.y();
+  zAcc = Accel.z() - 9.81;
 
-  xAcc = highPassFilter(linearAccelData.acceleration.x - avgX, xAcc);
-  yAcc = highPassFilter(linearAccelData.acceleration.y - avgY, yAcc);
-  zAcc = highPassFilter(linearAccelData.acceleration.z - avgZ, zAcc);
-
-  xVel = highPassFilter(xVel + xAcc * DELTA_T, xVel);
-  yVel = highPassFilter(yVel + yAcc * DELTA_T, yVel);
-  zVel = highPassFilter(zVel + zAcc * DELTA_T, zVel);
+  xVel = xVel + buttHigh1.step(xAcc * DELTA_T);
+  yVel = yVel + buttHigh2.step(yAcc * DELTA_T);
+  zVel = zVel + buttHigh3.step(zAcc * DELTA_T);
 
   xPos = xPos + (xVel * DELTA_T);
   yPos = yPos + (yVel * DELTA_T);

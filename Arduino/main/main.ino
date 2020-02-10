@@ -52,13 +52,13 @@ void loop(void) {
   // imu::Quaternion quatConj = quat.conjugate();
   // imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
 
-  xAcc = highPassFilter(linearAccelData.acceleration.x - avgX);
-  yAcc = highPassFilter(linearAccelData.acceleration.y - avgY);
-  zAcc = highPassFilter(linearAccelData.acceleration.z - avgZ);
+  xAcc = highPassFilter(linearAccelData.acceleration.x - avgX, xAcc);
+  yAcc = highPassFilter(linearAccelData.acceleration.y - avgY, yAcc);
+  zAcc = highPassFilter(linearAccelData.acceleration.z - avgZ, zAcc);
 
-  xVel = highPassFilter(xVel + xAcc * DELTA_T);
-  yVel = highPassFilter(yVel + yAcc * DELTA_T);
-  zVel = highPassFilter(zVel + zAcc * DELTA_T);
+  xVel = highPassFilter(xVel + xAcc * DELTA_T, xVel);
+  yVel = highPassFilter(yVel + yAcc * DELTA_T, yVel);
+  zVel = highPassFilter(zVel + zAcc * DELTA_T, zVel);
 
   xPos = xPos + (xVel * DELTA_T);
   yPos = yPos + (yVel * DELTA_T);

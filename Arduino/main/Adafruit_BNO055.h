@@ -27,6 +27,7 @@
 
 #include "Adafruit_Sensor.h"
 #include "utilities/imumaths.h"
+#include "utilities/high_pass_filter.h"
 
 /** BNO055 Address A **/
 #define BNO055_ADDRESS_A (0x28)
@@ -315,6 +316,10 @@ public:
   void enterNormalMode();
 
   void calibrate();
+  void updateReadings();
+  imu::Vector<3> getPosition();
+  imu::Vector<3> getEuler();
+  void resetPosition();
 
 private:
   byte read8(adafruit_bno055_reg_t);
@@ -326,6 +331,19 @@ private:
 
   int32_t _sensorID;
   adafruit_bno055_opmode_t _mode;
+
+  double xPos = 0, yPos = 0, zPos = 0,
+         xVel = 0, yVel = 0, zVel = 0,
+         xAcc = 0, yAcc = 0, zAcc = 0,
+         pitch = 0, yaw = 0, roll = 0;
+
+  const uint16_t SAMPLE_RATE = 10; // [ms]
+  const double DELTA_T = (double)(SAMPLE_RATE) / 1000.0; // [s]
+
+  // Instantiate Butterworth HighPass (one filter per variable)
+  FilterBuHp2 buttHigh1;
+  FilterBuHp2 buttHigh2;
+  FilterBuHp2 buttHigh3;
 };
 
 #endif

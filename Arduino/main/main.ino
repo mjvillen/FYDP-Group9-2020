@@ -44,7 +44,7 @@ void setup(void) {
 
   // delay(2000);
 
-  calibrateAccelerations();
+  // calibrateAccelerations();
 
   // delay(2000);
 }

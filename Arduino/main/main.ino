@@ -6,7 +6,14 @@
 
 // GLOBAL VARIABLES
 unsigned long tStart = 0;
-int state = 0;  // case control variable
+enum states {
+  activeOperation,
+  inactiveOperation,
+  waitingCalibration,
+  calibrating,
+  error
+};
+states state;  // case control variable
 
 // CONSTANTS
 const uint16_t SAMPLE_RATE = 10; // [ms]
@@ -16,24 +23,25 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 void setup(void) {
   Serial.begin(115200);
+  state = waitingCalibration;
 }
 
 void loop(void) {
   switch (state) {
-    case 0:    // Power on and wait for callibration
+    case waitingCalibration:    // Power on and wait for callibration
       if (!bno.begin()) {
         Serial.print("No BNO055 detected");
         // TODO: throw a major error - recover?
-        state = 4;
+        state = error;
       }
 
       // TODO: indicate waiting for calibration
 
-      // TODO: wait for button press then switch to state 1
-      state = 1;
+      // TODO: wait for button press then switch to calibrating
+      state = calibrating;
       break;
 
-    case 1:    // Calibration Phase
+    case calibrating:    // Calibration Phase
       // TODO: indicate calibrating
 
       // calibrate bno
@@ -42,11 +50,11 @@ void loop(void) {
 
       // TODO: indicate calibration finished
 
-      // TODO: wait for button press then switch to state 2
-      state = 2;
+      // TODO: wait for button press then switch to inactive operation
+      state = inactiveOperation;
       break;
 
-    case 2:    // Inactive operation - the arm is currently tracking
+    case inactiveOperation:    // Inactive operation - the arm is currently tracking
       {
         // TODO: indicate active operation
 
@@ -62,22 +70,22 @@ void loop(void) {
           // poll until the next sample is ready
         }
 
-        // TODO: check for button press to switch to state 3
-        state = 3;
+        // TODO: check for button press to switch to active operation
+        state = activeOperation;
       }
       break;
 
-    case 3:    // Active operation - the button is pressed and the arm will not move
+    case activeOperation:    // Active operation - the button is pressed and the arm will not move
       // TODO: indicate inactive operation
 
       // reset all position calculation variables
       bno.resetPosition();
 
-      // TODO: wait for button release then switch to state 2
-      state = 2;
+      // TODO: wait for button release then switch to inactive operation
+      state = inactiveOperation;
       break;
 
-    case 4:    // Error state - something bad happened
+    case error:    // Error state - something bad happened
       // TODO: Maybe split into minor / major?
       // TODO: Some sort of error recovery?
 

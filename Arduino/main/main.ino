@@ -20,9 +20,9 @@ states state;  // case control variable
 // CONSTANTS
 const uint16_t SAMPLE_RATE = 10; // [ms]
 const uint16_t buttonPin = 2; // TODO: set button pin
-const uint16_t redPin= 11; // TODO: set LED pin
-const uint16_t greenPin = 10; // TODO: set LED pin
-const uint16_t bluePin = 9; // TODO: set LED pin
+const uint16_t redLightPin= 11; // TODO: set LED pin
+const uint16_t greenLightPin = 12; // TODO: set LED pin
+const uint16_t blueLightPin = 13; // TODO: set LED pin
 
 // Instantiate BNO; id, address, &Wire
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -33,9 +33,9 @@ void setup(void) {
   state = waitingCalibration;
 
   pinMode(buttonPin, INPUT);
-  pinMode(redPin, OUTPUT);
-  pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);
+  pinMode(redLightPin, OUTPUT);
+  pinMode(greenLightPin, OUTPUT);
+  pinMode(blueLightPin, OUTPUT);
 }
 
 void loop(void) {
@@ -47,7 +47,8 @@ void loop(void) {
         state = error;
       }
 
-      // TODO: indicate waiting for calibration
+      // indicate waiting for calibration
+      RGBColor(0, 0, 255); // Blue
 
       // wait for button press then switch to calibrating
       buttonPressCount = 0;
@@ -60,13 +61,15 @@ void loop(void) {
       break;
 
     case calibrating:    // Calibration Phase
-      // TODO: indicate calibrating
+      // indicate calibrating
+      RGBColor(255, 255, 0); // Yellow
 
       // calibrate bno
       bno.calibrate();
       bno.setExtCrystalUse(true);
 
-      // TODO: indicate calibration finished
+      // indicate calibration finished
+      RGBColor(0, 255, 255); // Cyan
 
       // wait for button press then switch to inactive operation
       buttonPressCount = 0;
@@ -80,7 +83,8 @@ void loop(void) {
 
     case inactiveOperation:    // Inactive operation - the arm is currently tracking
       {
-        // TODO: indicate active operation
+        // indicate active operation
+        RGBColor(0, 255, 0); // Green
 
         // instantiate time current time
         tStart = micros();
@@ -109,7 +113,8 @@ void loop(void) {
       break;
 
     case activeOperation:    // Active operation - the button is pressed and the arm will not move
-      // TODO: indicate inactive operation
+      // indicate inactive operation
+      RGBColor(255, 255, 255); // White
 
       // reset all position calculation variables
       bno.resetPosition();
@@ -128,9 +133,16 @@ void loop(void) {
       // TODO: Maybe split into minor / major?
       // TODO: Some sort of error recovery?
 
-      // TODO: indicate error
+      // indicate error
+      RGBColor(255, 0, 0); // Red
 
       break;
 
   } // end state loop
 } // end void loop
+
+void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue) {
+  analogWrite(redLightPin, redValue);
+  analogWrite(greenLightPin, greenValue);
+  analogWrite(blueLightPin, blueValue);
+}

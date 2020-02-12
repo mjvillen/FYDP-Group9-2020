@@ -19,14 +19,23 @@ states state;  // case control variable
 
 // CONSTANTS
 const uint16_t SAMPLE_RATE = 10; // [ms]
-const int buttonPin = 2; // TODO: set button pin
+const uint16_t buttonPin = 2; // TODO: set button pin
+const uint16_t redPin= 11; // TODO: set LED pin
+const uint16_t greenPin = 10; // TODO: set LED pin
+const uint16_t bluePin = 9; // TODO: set LED pin
 
 // Instantiate BNO; id, address, &Wire
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 void setup(void) {
   Serial.begin(115200);
+
   state = waitingCalibration;
+
+  pinMode(buttonPin, INPUT);
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
 }
 
 void loop(void) {

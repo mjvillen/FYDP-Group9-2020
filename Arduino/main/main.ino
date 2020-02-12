@@ -5,6 +5,8 @@
 #include "Adafruit_BNO055.h"
 
 // GLOBAL VARIABLES
+uint16_t buttonPressCount = 0;
+uint16_t buttonReleaseCount = 0;
 unsigned long tStart = 0;
 enum states {
   activeOperation,
@@ -17,6 +19,7 @@ states state;  // case control variable
 
 // CONSTANTS
 const uint16_t SAMPLE_RATE = 10; // [ms]
+const int buttonPin = 2; // TODO: set button pin
 
 // Instantiate BNO; id, address, &Wire
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -37,8 +40,14 @@ void loop(void) {
 
       // TODO: indicate waiting for calibration
 
-      // TODO: wait for button press then switch to calibrating
-      state = calibrating;
+      // wait for button press then switch to calibrating
+      buttonPressCount = 0;
+      while (digitalRead(buttonPin) == HIGH) {
+        buttonPressCount++;
+      }
+      if (buttonPressCount > 20) {
+        state = calibrating;
+      }
       break;
 
     case calibrating:    // Calibration Phase
@@ -50,8 +59,14 @@ void loop(void) {
 
       // TODO: indicate calibration finished
 
-      // TODO: wait for button press then switch to inactive operation
-      state = inactiveOperation;
+      // wait for button press then switch to inactive operation
+      buttonPressCount = 0;
+      while (digitalRead(buttonPin) == HIGH) {
+        buttonPressCount++;
+      }
+      if (buttonPressCount > 20) {
+        state = inactiveOperation;
+      }
       break;
 
     case inactiveOperation:    // Inactive operation - the arm is currently tracking
@@ -70,8 +85,17 @@ void loop(void) {
           // poll until the next sample is ready
         }
 
-        // TODO: check for button press to switch to active operation
-        state = activeOperation;
+        // check for button press to switch to active operation
+        buttonPressCount = 0;
+        bool buttonPrressed = false;
+        while (digitalRead(buttonPin) == HIGH && !buttonPrressed) {
+          buttonPressCount++;
+
+          if (buttonPressCount > 20) {
+            state = activeOperation;
+            buttonPrressed  = true;
+          }
+        }
       }
       break;
 
@@ -81,8 +105,14 @@ void loop(void) {
       // reset all position calculation variables
       bno.resetPosition();
 
-      // TODO: wait for button release then switch to inactive operation
-      state = inactiveOperation;
+      // wait for button release then switch to inactive operation
+      buttonReleaseCount = 0;
+      while (digitalRead(buttonPin) == LOW) {
+        buttonReleaseCount++;
+      }
+      if (buttonReleaseCount > 20) {
+        state = inactiveOperation;
+      }
       break;
 
     case error:    // Error state - something bad happened

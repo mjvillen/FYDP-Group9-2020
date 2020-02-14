@@ -98,16 +98,13 @@ void loop(void) {
           // poll until the next sample is ready
         }
 
-        // check for button press to switch to active operation
-        buttonPressCount = 0;
-        bool buttonPrressed = false;
-        while (digitalRead(buttonPin) == HIGH && !buttonPrressed) {
-          buttonPressCount++;
-
-          if (buttonPressCount > 20) {
-            state = activeOperation;
-            buttonPrressed  = true;
-          }
+        // wait for button release then switch to active operation
+        buttonReleaseCount = 0;
+        while (digitalRead(buttonPin) == LOW) {
+          buttonReleaseCount++;
+        }
+        if (buttonReleaseCount > 20) {
+          state = inactiveOperation;
         }
       }
       break;
@@ -119,15 +116,18 @@ void loop(void) {
       // reset all position calculation variables
       bno.resetPosition();
 
-      // wait for button release then switch to inactive operation
-      buttonReleaseCount = 0;
-      while (digitalRead(buttonPin) == LOW) {
-        buttonReleaseCount++;
+      // check for button press to switch to inactive operation
+      buttonPressCount = 0;
+      bool buttonPrressed = false;
+      while (digitalRead(buttonPin) == HIGH && !buttonPrressed) {
+        buttonPressCount++;
+
+        if (buttonPressCount > 20) {
+          state = activeOperation;
+          buttonPrressed  = true;
+        }
       }
-      if (buttonReleaseCount > 20) {
-        state = inactiveOperation;
-      }
-      break;
+     break;
 
     case error:    // Error state - something bad happened
       // TODO: Maybe split into minor / major?

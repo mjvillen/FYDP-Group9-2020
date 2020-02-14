@@ -71,17 +71,17 @@ void loop(void) {
       // indicate calibration finished
       RGBColor(0, 255, 255); // Cyan
 
-      // wait for button press then switch to inactive operation
+      // wait for button press then switch to active operation
       buttonPressCount = 0;
       while (digitalRead(buttonPin) == HIGH) {
         buttonPressCount++;
       }
       if (buttonPressCount > 20) {
-        state = inactiveOperation;
+        state = activeOperation;
       }
       break;
 
-    case inactiveOperation:    // Inactive operation - the arm is currently tracking
+    case activeOperation:    // Active operation - the button is pressed and the arm is currently tracking
       {
         // indicate active operation
         RGBColor(0, 255, 0); // Green
@@ -98,32 +98,32 @@ void loop(void) {
           // poll until the next sample is ready
         }
 
-        // wait for button release then switch to active operation
+        // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
         while (digitalRead(buttonPin) == LOW) {
           buttonReleaseCount++;
         }
         if (buttonReleaseCount > 20) {
-          state = inactiveOperation;
+          state = activeOperation;
         }
       }
       break;
 
-    case activeOperation:    // Active operation - the button is pressed and the arm will not move
+    case inactiveOperation:    // Inactive operation - the button is not pressed and the arm will not move
       // indicate inactive operation
       RGBColor(255, 255, 255); // White
 
       // reset all position calculation variables
       bno.resetPosition();
 
-      // check for button press to switch to inactive operation
+      // check for button press to switch to active operation
       buttonPressCount = 0;
       bool buttonPrressed = false;
       while (digitalRead(buttonPin) == HIGH && !buttonPrressed) {
         buttonPressCount++;
 
         if (buttonPressCount > 20) {
-          state = activeOperation;
+          state = inactiveOperation;
           buttonPrressed  = true;
         }
       }

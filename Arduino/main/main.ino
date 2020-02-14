@@ -7,7 +7,6 @@
 // GLOBAL VARIABLES
 uint16_t buttonPressCount = 0;
 uint16_t buttonReleaseCount = 0;
-unsigned long tStart = 0;
 enum states {
   activeOperation,
   inactiveOperation,
@@ -18,7 +17,6 @@ enum states {
 states state;  // case control variable
 
 // CONSTANTS
-const uint16_t SAMPLE_RATE = 10; // [ms]
 const uint16_t buttonPin = 2; // TODO: set button pin
 const uint16_t redLightPin= 11; // TODO: set LED pin
 const uint16_t greenLightPin = 12; // TODO: set LED pin
@@ -86,17 +84,8 @@ void loop(void) {
         // indicate active operation
         RGBColor(0, 255, 0); // Green
 
-        // instantiate time current time
-        tStart = micros();
+        // TODO: update the readings
 
-        // update the readings
-        bno.updateReadings();
-        imu::Vector<3> position = bno.getPosition();
-        imu::Vector<3> euler = bno.getEuler();
-
-        while ((micros() - tStart) < (SAMPLE_RATE * 1000)) {
-          // poll until the next sample is ready
-        }
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -113,8 +102,7 @@ void loop(void) {
       // indicate inactive operation
       RGBColor(255, 255, 255); // White
 
-      // reset all position calculation variables
-      bno.resetPosition();
+      // TODO: reset all position calculation variables
 
       // check for button press to switch to active operation
       buttonPressCount = 0;

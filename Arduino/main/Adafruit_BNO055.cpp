@@ -48,11 +48,6 @@ Adafruit_BNO055::Adafruit_BNO055(int32_t sensorID, uint8_t address,
   _sensorID = sensorID;
   _address = address;
   _wire = theWire;
-
-  // Instantiate Butterworth HighPass (one filter per variable)
-  buttHigh1 = FilterBuHp2();
-  buttHigh2 = FilterBuHp2();
-  buttHigh3 = FilterBuHp2();
 }
 
 /*!
@@ -918,65 +913,4 @@ void Adafruit_BNO055::calibrate() {
         Serial.print(" Accel="); Serial.print(accel, DEC); Serial.print(" Mag="); Serial.println(mag, DEC);
         delay(100);
     }
-}
-
-void Adafruit_BNO055::updateReadings() {
-  // Instantiate HighPass; cutoffFrequency/samplingFrequency (one filter per variable)
-  // HighPassFilter highPassFilter(0.1 / (1000/SAMPLE_RATE));
-
-  // create events and poll data
-  sensors_event_t orientationData, accelData;
-  getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  getEvent(&accelData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-
-  // perform quaternion math to linearize acceleration
-  imu::Quaternion quat = getQuat();
-  imu::Quaternion quatConj = quat.conjugate();
-  imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
-
-  // update the current acceleration values
-  xAcc = Accel.x();
-  yAcc = Accel.y();
-  zAcc = Accel.z() - 9.81;
-
-  // update the current velocity values
-  xVel = xVel + buttHigh1.step(xAcc * DELTA_T);
-  yVel = yVel + buttHigh2.step(yAcc * DELTA_T);
-  zVel = zVel + buttHigh3.step(zAcc * DELTA_T);
-
-  // update the current position values
-  xPos = xPos + (xVel * DELTA_T);
-  yPos = yPos + (yVel * DELTA_T);
-  zPos = zPos + (zVel * DELTA_T);
-
-  pitch = orientationData.orientation.pitch;
-  yaw = orientationData.orientation.heading;
-  roll = orientationData.orientation.roll;
-
-  Serial.print("POS: ");
-  Serial.print(xPos, 5);
-  Serial.print(" , ");
-  Serial.print(yPos, 5);
-  Serial.print(" , ");
-  Serial.println(zPos, 5);
-  Serial.print("EULER: ");
-  Serial.print(pitch, 5);
-  Serial.print(" , ");
-  Serial.print(yaw, 5);
-  Serial.print(" , ");
-  Serial.println(roll, 5);
-}
-
-imu::Vector<3> Adafruit_BNO055::getPosition() {
-  return imu::Vector<3> (xPos, yPos, zPos);
-}
-
-imu::Vector<3> Adafruit_BNO055::getEuler() {
-  return imu::Vector<3> (pitch, yaw, roll);
-}
-
-void Adafruit_BNO055::resetPosition() {
-  xPos = 0, yPos = 0, zPos = 0,
-  xVel = 0, yVel = 0, zVel = 0,
-  xAcc = 0, yAcc = 0, zAcc = 0;
 }

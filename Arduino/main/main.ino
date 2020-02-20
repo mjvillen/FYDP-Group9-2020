@@ -6,7 +6,7 @@
 #include "utilities/high_pass_filter.h"
 
 // GLOBAL VARIABLES
-double xPos = 0, yPos = 0, zPos = 0, xVel = 0, yVel = 0, zVel = 0, xAcc = 0, yAcc = 0, zAcc = 0, headingVel = 0;
+double xPos = 0, yPos = 0, zPos = 0, xVel = 0, yVel = 0, zVel = 0, xAcc = 0, yAcc = 0, zAcc = 0, headingVel = 0, xAcc2 = 0, yAcc2 = 0, zAcc2 = 0;
 double avgX = 0, avgY = 0, avgZ = 0;
 uint16_t printCount = 0; //counter to avoid printing every 10MS sample
 
@@ -19,6 +19,7 @@ const double DELTA_T =  (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
 // Check I2C device address and correct line below (by default address is 0x29 or 0x28)
 //                                   id, address, &Wire
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+Adafruit_BNO055 bno2 = Adafruit_BNO055(55, 0x29);
 
 //                            cutoffFrequency/samplingFrequency
 HighPassFilter highPassFilter_ax(0.1 / (1000/BNO055_SAMPLERATE_DELAY_MS));
@@ -39,14 +40,16 @@ void setup(void) {
     while (1);
   }
 
+  if (!bno2.begin()) {
+    Serial.print("No BNO055 2 detected");
+    while (1);
+  }
+
   bno.calibrate();
   bno.setExtCrystalUse(true);
 
-  // delay(2000);
-
-  // calibrateAccelerations();
-
-  // delay(2000);
+  bno2.calibrate();
+  bno2.setExtCrystalUse(true);
 }
 
 void loop(void) {
@@ -58,35 +61,42 @@ void loop(void) {
   imu::Quaternion quatConj = quat.conjugate();
   imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
 
+  sensors_event_t orientationData2, linearAccelData2, accelData2;
+  bno2.getEvent(&orientationData2, Adafruit_BNO055::VECTOR_EULER);
+  bno2.getEvent(&accelData2, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+  imu::Quaternion quat2 = bno2.getQuat();
+  imu::Quaternion quatConj2 = quat2.conjugate();
+  imu::Vector<3> Accel2 = quat2.rotateVector(imu::Vector<3> (accelData2.acceleration.x, accelData2.acceleration.y, accelData2.acceleration.z));
+
   xAcc = Accel.x();
   yAcc = Accel.y();
   zAcc = Accel.z() - 9.81;
 
-  xVel = xVel + buttHigh1.step(xAcc * DELTA_T);
-  yVel = yVel + buttHigh2.step(yAcc * DELTA_T);
-  zVel = zVel + buttHigh3.step(zAcc * DELTA_T);
+  
+  xAcc2 = Accel2.x();
+  yAcc2 = Accel2.y();
+  zAcc2 = Accel2.z() - 9.81;
 
-  xPos = xPos + (xVel * DELTA_T);
-  yPos = yPos + (yVel * DELTA_T);
-  zPos = zPos + (zVel * DELTA_T);
-
-  // velocity of sensor in the direction it's facing
-  // headingVel = (0.5 * DELTA_T * DELTA_T) * linearAccelData.acceleration.x / cos(DEG_2_RAD * orientationData.orientation.x);
-
-  if (printCount * BNO055_SAMPLERATE_DELAY_MS >= PRINT_DELAY_MS) {
+//  if (printCount * BNO055_SAMPLERATE_DELAY_MS >= PRINT_DELAY_MS) {
     //enough iterations have passed that we can print the latest data
-    Serial.print("NEW POS: ");
-    Serial.print(xPos, 5);
-    Serial.print(" , ");
-    Serial.print(yPos, 5);
-    Serial.print(" , ");
-    Serial.println(zPos, 5);
+    Serial.print(xAcc, 5);
+    Serial.print(",");
+    Serial.print(yAcc, 5);
+    Serial.print(",");
+    Serial.print(zAcc, 5);
+    
+    Serial.print(",");
+    Serial.print(xAcc2, 5);
+    Serial.print(",");
+    Serial.print(yAcc2, 5);
+    Serial.print(",");
+    Serial.println(zAcc2, 5);
 
-    printCount = 0;
-  }
-  else {
-    printCount = printCount + 1;
-  }
+//    printCount = 0;
+//  }
+//  else {
+//    printCount = printCount + 1;
+//  }
 
   while ((micros() - tStart) < (BNO055_SAMPLERATE_DELAY_MS * 1000)) {
     //poll until the next sample is ready

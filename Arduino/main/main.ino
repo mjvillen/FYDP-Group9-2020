@@ -23,7 +23,9 @@ const uint16_t greenLightPin = 12; // TODO: set LED pin
 const uint16_t blueLightPin = 13; // TODO: set LED pin
 
 // Instantiate BNO; id, address, &Wire
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28);
+Adafruit_BNO055 bnoWrist = Adafruit_BNO055(55, 0x29);
+
 
 void setup(void) {
   Serial.begin(115200);
@@ -39,8 +41,14 @@ void setup(void) {
 void loop(void) {
   switch (state) {
     case waitingCalibration:    // Power on and wait for callibration
-      if (!bno.begin()) {
-        Serial.print("No BNO055 detected");
+      if (!bnoShoulder.begin()) {
+        Serial.print("No Shoulder IMU detected");
+        // TODO: throw a major error - recover?
+        state = error;
+      }
+
+      if (!bnoWrist.begin()) {
+        Serial.print("No Wrist IMU detected");
         // TODO: throw a major error - recover?
         state = error;
       }
@@ -62,9 +70,12 @@ void loop(void) {
       // indicate calibrating
       RGBColor(255, 255, 0); // Yellow
 
-      // calibrate bno
-      bno.calibrate();
-      bno.setExtCrystalUse(true);
+      // calibrate IMUs
+      bnoShoulder.calibrate();
+      bnoShoulder.setExtCrystalUse(true);
+
+      bnoWrist.calibrate();
+      bnoWrist.setExtCrystalUse(true);
 
       // indicate calibration finished
       RGBColor(0, 255, 255); // Cyan
@@ -85,7 +96,7 @@ void loop(void) {
         RGBColor(0, 255, 0); // Green
 
         // TODO: update the readings
-
+        bnoShoulder
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;

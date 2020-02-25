@@ -15,6 +15,7 @@ enum states {
   error
 };
 states state;  // case control variable
+double xPos = 0, yPos = 0, zPos = 0;
 
 // CONSTANTS
 const uint16_t buttonPin = 2; // TODO: set button pin

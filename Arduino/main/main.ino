@@ -17,6 +17,7 @@ enum states {
 states state;  // case control variable
 double xPos = 0, yPos = 0, zPos = 0;
 double xOffset = 0, yOffset = 0, zOffset = 0;
+double pitchOffest = 0, yawOffset = 0, rollOffset = 0, elbowOffset = 0;
 bool zeroed = false;
 
 // CONSTANTS
@@ -32,13 +33,19 @@ Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28);
 Adafruit_BNO055 bnoWrist = Adafruit_BNO055(55, 0x29);
 
 imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
-  // TODO: fix this
   double x = L1*sin(theta_3)*(sin(theta_0)*sin(theta_2) + cos(theta_0)*cos(theta_2)*sin(theta_1)) - (L1 + L2)*(sin(theta_0)*sin(theta_2)*sin(theta_3) - cos(theta_0)*cos(theta_1)*cos(theta_3) + cos(theta_0)*cos(theta_2)*sin(theta_1)*sin(theta_3)) - (L1*cos(theta_0)*cos(theta_1)*2*(cos(theta_3) - 1))/2;
   double y = (L1 + L2)*(cos(theta_0)*sin(theta_2)*sin(theta_3) + cos(theta_1)*cos(theta_3)*sin(theta_0) - cos(theta_2)*sin(theta_0)*sin(theta_1)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*sin(theta_2) - cos(theta_2)*sin(theta_0)*sin(theta_1)) - (L1*cos(theta_1)*sin(theta_0)*2*(cos(theta_3) - 1))/2;
   double z = L1*cos(theta_1)*cos(theta_2)*sin(theta_3) - (cos(theta_3)*sin(theta_1) + cos(theta_1)*cos(theta_2)*sin(theta_3))*(L1 + L2) + (L1*sin(theta_1)*2*(cos(theta_3) - 1))/2;
 
   imu::Vector<3> ret = imu::Vector<3>(x, y, z);
   return ret;
+}
+
+
+void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue) {
+  analogWrite(redLightPin, redValue);
+  analogWrite(greenLightPin, greenValue);
+  analogWrite(blueLightPin, blueValue);
 }
 
 void setup(void) {
@@ -97,15 +104,25 @@ void loop(void) {
         // indicate calibration finished
         RGBColor(0, 255, 255); // Cyan
 
-        // wait for button press then switch to active operation
+        // wait for button press then switch to active operation, also perform initial state work
         buttonPressCount = 0;
         while (digitalRead(buttonPin) == HIGH) {
           buttonPressCount++;
         }
         if (buttonPressCount > 20) {
-          xPos = 0, yPos = 0, zPos = 0;
+          xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
           state = activeOperation;
           zeroed = false;
+
+          // We need to get an offset for the IMU and elbow readings to be used throughout operation of the arm
+          sensors_event_t offsetOrientationData;
+          bnoShoulder.getEvent(&offsetOrientationData, Adafruit_BNO055::VECTOR_EULER);
+          pitchOffest = offsetOrientationData.orientation.pitch;
+          yawOffset = offsetOrientationData.orientation.heading;
+          rollOffset = offsetOrientationData.orientation.roll;
+
+          // TODO: elbow reading goes here
+          elbowOffset = 0;
         }
       }
       break;
@@ -121,6 +138,7 @@ void loop(void) {
         // TODO: elbow reading goes here
         double elbow = 0;
 
+        // if we need to rezero the arm, get the new offset values and update zeroed bool
         if (!zeroed) {
           imu::Vector<3> pos = getPosition(pitch, yaw, roll, elbow);
           xOffset = pos.x();
@@ -133,11 +151,15 @@ void loop(void) {
         // indicate active operation
         RGBColor(0, 255, 0); // Green
 
+        // get the position from current readings
         imu::Vector<3> pos = getPosition(pitch, yaw, roll, elbow);
+
+        // TODO: maybe delete - mostly here for debugs
         double x = pos.x();
         double y = pos.y();
         double z = pos.z();
 
+        // update the global position based on the current while considering the offset for start position
         xPos += x - xOffset;
         yPos += y - yOffset;
         zPos += z - zOffset;
@@ -157,8 +179,6 @@ void loop(void) {
       {
         // indicate inactive operation
         RGBColor(255, 255, 255); // White
-
-        // TODO: reset all position calculation variables
 
         // check for button press to switch to active operation
         buttonPressCount = 0;
@@ -187,9 +207,3 @@ void loop(void) {
 
   } // end state loop
 } // end void loop
-
-void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue) {
-  analogWrite(redLightPin, redValue);
-  analogWrite(greenLightPin, greenValue);
-  analogWrite(blueLightPin, blueValue);
-}

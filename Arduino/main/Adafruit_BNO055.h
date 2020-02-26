@@ -316,6 +316,8 @@ public:
 
   void calibrate();
 
+  imu::Vector<3> getOffsetPitchYawRoll();
+
 private:
   byte read8(adafruit_bno055_reg_t);
   bool readLen(adafruit_bno055_reg_t, byte *buffer, uint8_t len);
@@ -326,6 +328,8 @@ private:
 
   int32_t _sensorID;
   adafruit_bno055_opmode_t _mode;
+
+  double pitchOffset, yawOffset, rollOffset;
 };
 
 #endif

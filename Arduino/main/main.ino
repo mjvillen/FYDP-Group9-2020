@@ -16,8 +16,7 @@ enum states {
 };
 states state;  // case control variable
 double xPos = 0, yPos = 0, zPos = 0;
-double xOffset = 0, yOffset = 0, zOffset = 0;
-double pitchOffest = 0, yawOffset = 0, rollOffset = 0, elbowOffset = 0;
+double xOffset = 0, yOffset = 0, zOffset = 0, elbowOffset = 0;
 bool zeroed = false;
 
 // CONSTANTS
@@ -37,8 +36,7 @@ imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, doubl
   double y = (L1 + L2)*(cos(theta_0)*sin(theta_2)*sin(theta_3) + cos(theta_1)*cos(theta_3)*sin(theta_0) - cos(theta_2)*sin(theta_0)*sin(theta_1)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*sin(theta_2) - cos(theta_2)*sin(theta_0)*sin(theta_1)) - (L1*cos(theta_1)*sin(theta_0)*2*(cos(theta_3) - 1))/2;
   double z = L1*cos(theta_1)*cos(theta_2)*sin(theta_3) - (cos(theta_3)*sin(theta_1) + cos(theta_1)*cos(theta_2)*sin(theta_3))*(L1 + L2) + (L1*sin(theta_1)*2*(cos(theta_3) - 1))/2;
 
-  imu::Vector<3> ret = imu::Vector<3>(x, y, z);
-  return ret;
+  return imu::Vector<3>(x, y, z);
 }
 
 
@@ -96,10 +94,8 @@ void loop(void) {
 
         // calibrate IMUs
         bnoShoulder.calibrate();
-        bnoShoulder.setExtCrystalUse(true);
 
         bnoWrist.calibrate();
-        bnoWrist.setExtCrystalUse(true);
 
         // indicate calibration finished
         RGBColor(0, 255, 255); // Cyan
@@ -114,13 +110,6 @@ void loop(void) {
           state = activeOperation;
           zeroed = false;
 
-          // We need to get an offset for the IMU and elbow readings to be used throughout operation of the arm
-          sensors_event_t offsetOrientationData;
-          bnoShoulder.getEvent(&offsetOrientationData, Adafruit_BNO055::VECTOR_EULER);
-          pitchOffest = offsetOrientationData.orientation.pitch;
-          yawOffset = offsetOrientationData.orientation.heading;
-          rollOffset = offsetOrientationData.orientation.roll;
-
           // TODO: elbow reading goes here
           elbowOffset = 0;
         }
@@ -129,11 +118,10 @@ void loop(void) {
 
     case activeOperation:    // Active operation - the button is pressed and the arm is currently tracking
       {
-        sensors_event_t orientationData;
-        bnoShoulder.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-        double pitch = orientationData.orientation.pitch;
-        double yaw = orientationData.orientation.heading;
-        double roll = orientationData.orientation.roll;
+        imu::Vector<3> angles = bnoShoulder.getOffsetPitchYawRoll();
+        double pitch = angles.x();
+        double yaw = angles.y();
+        double roll = angles.z();
 
         // TODO: elbow reading goes here
         double elbow = 0;

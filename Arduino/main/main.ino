@@ -5,6 +5,7 @@
 #include "Adafruit_BNO055.h"
 
 // GLOBAL VARIABLES
+bool calibrated = false;
 uint16_t buttonPressCount = 0;
 uint16_t buttonReleaseCount = 0;
 unsigned long tStart = 0;
@@ -19,10 +20,11 @@ states state;  // case control variable
 
 // CONSTANTS
 const uint16_t SAMPLE_RATE = 10; // [ms]
-const uint16_t buttonPin = 2; // TODO: set button pin
+const uint16_t buttonPin = 7; // TODO: set button pin
 const uint16_t redLightPin= 11; // TODO: set LED pin
 const uint16_t greenLightPin = 12; // TODO: set LED pin
 const uint16_t blueLightPin = 13; // TODO: set LED pin
+const uint16_t buttonDebounce = 10;
 
 // Instantiate BNO; id, address, &Wire
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -41,43 +43,55 @@ void setup(void) {
 void loop(void) {
   switch (state) {
     case waitingCalibration:    // Power on and wait for callibration
-      if (!bno.begin()) {
-        Serial.print("No BNO055 detected");
-        // TODO: throw a major error - recover?
-        state = error;
-      }
+      {
+        if (!bno.begin()) {
+          Serial.print("No BNO055 detected");
+          // TODO: throw a major error - recover?
+          state = error;
+          break;
+        }
 
-      // indicate waiting for calibration
-      RGBColor(0, 0, 255); // Blue
+        // indicate waiting for calibration
+        RGBColor(0, 0, 255); // Blue
+        // Serial.println("Waiting for calibration");
 
-      // wait for button press then switch to calibrating
-      buttonPressCount = 0;
-      while (digitalRead(buttonPin) == HIGH) {
-        buttonPressCount++;
-      }
-      if (buttonPressCount > 20) {
-        state = calibrating;
+        // wait for button press and release then switch to calibrating
+        buttonPressCount = 0;
+        while (digitalRead(buttonPin) == HIGH) {
+          buttonPressCount++;
+          if (buttonPressCount > buttonDebounce / 2) {
+            state = calibrating;
+          }
+        }
       }
       break;
 
     case calibrating:    // Calibration Phase
-      // indicate calibrating
-      RGBColor(255, 255, 0); // Yellow
+      {
+        if (!calibrated) {
+          // indicate calibrating
+          RGBColor(255, 255, 0); // Yellow
+          // Serial.println("calibrating");
 
-      // calibrate bno
-      bno.calibrate();
-      bno.setExtCrystalUse(true);
+          // calibrate bno
+          bno.calibrate();
 
-      // indicate calibration finished
-      RGBColor(0, 255, 255); // Cyan
+          calibrated = true;
+        }
 
-      // wait for button press then switch to active operation
-      buttonPressCount = 0;
-      while (digitalRead(buttonPin) == HIGH) {
-        buttonPressCount++;
-      }
-      if (buttonPressCount > 20) {
-        state = activeOperation;
+        // indicate calibration finished
+        RGBColor(0, 255, 255); // Cyan
+        // Serial.println("calibration done");
+
+        // wait for button press then switch to active operation
+        buttonPressCount = 0;
+        while (digitalRead(buttonPin) == HIGH) {
+          buttonPressCount++;
+          if (buttonPressCount > buttonDebounce) {
+            state = activeOperation;
+            break;
+          }
+        }
       }
       break;
 
@@ -85,6 +99,7 @@ void loop(void) {
       {
         // indicate active operation
         RGBColor(0, 255, 0); // Green
+        // Serial.println("Active operation");
 
         // instantiate time current time
         tStart = micros();
@@ -102,40 +117,45 @@ void loop(void) {
         buttonReleaseCount = 0;
         while (digitalRead(buttonPin) == LOW) {
           buttonReleaseCount++;
-        }
-        if (buttonReleaseCount > 20) {
-          state = activeOperation;
+          if (buttonReleaseCount > buttonDebounce) {
+            state = inactiveOperation;
+            break;
+          }
         }
       }
       break;
 
     case inactiveOperation:    // Inactive operation - the button is not pressed and the arm will not move
-      // indicate inactive operation
-      RGBColor(255, 255, 255); // White
+      {
+        // indicate inactive operation
+        RGBColor(255, 255, 255); // White
+        // Serial.println("inacttive operation");
 
-      // reset all position calculation variables
-      bno.resetPosition();
+        // reset all position calculation variables
+        bno.resetPosition();
 
-      // check for button press to switch to active operation
-      buttonPressCount = 0;
-      bool buttonPrressed = false;
-      while (digitalRead(buttonPin) == HIGH && !buttonPrressed) {
-        buttonPressCount++;
-
-        if (buttonPressCount > 20) {
-          state = inactiveOperation;
-          buttonPrressed  = true;
+        // check for button press to switch to active operation
+        buttonPressCount = 0;
+        // bool buttonPrressed = false;
+        while (digitalRead(buttonPin) == HIGH ) { //&& !buttonPrressed) {
+          buttonPressCount++;
+          if (buttonPressCount > buttonDebounce) {
+            state = activeOperation;
+            // buttonPrressed  = true;
+            break;
+          }
         }
       }
      break;
 
     case error:    // Error state - something bad happened
-      // TODO: Maybe split into minor / major?
-      // TODO: Some sort of error recovery?
+      {
+        // TODO: Maybe split into minor / major?
+        // TODO: Some sort of error recovery?
 
-      // indicate error
-      RGBColor(255, 0, 0); // Red
-
+        // indicate error
+        RGBColor(255, 0, 0); // Red
+      }
       break;
 
   } // end state loop

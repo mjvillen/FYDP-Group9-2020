@@ -33,9 +33,9 @@ Adafruit_BNO055 bnoWrist = Adafruit_BNO055(55, 0x29);
 
 imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
   // TODO: fix this
-  double x = 0;//(L1 + L2)*(cos(theta_0)*cos(theta_1)*cos(theta_3) - cos(theta_2)*sin(theta_0)*sin(theta_3) + cos(theta_0)*sin(theta_1)*sin(theta_2)*sin(theta_3)) + L1*sin(theta_3)*(cos(theta_2)*sin(theta_0) - cos(theta_0)*sin(theta_1)*sin(theta_2)) - (L1*exp(-theta_3*1i)*cos(theta_0)*cos(theta_1)*(exp(theta_3*1i) - 1)^2)/2;
-  double y = 0;//(L1 + L2)*(cos(theta_1)*cos(theta_3)*sin(theta_0) + cos(theta_0)*cos(theta_2)*sin(theta_3) + sin(theta_0)*sin(theta_1)*sin(theta_2)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*cos(theta_2) + sin(theta_0)*sin(theta_1)*sin(theta_2)) - (L1*exp(-theta_3*1i)*cos(theta_1)*sin(theta_0)*(exp(theta_3*1i) - 1)^2)/2;
-  double z = 0;//-1 * (cos(theta_3)*sin(theta_1) - cos(theta_1)*sin(theta_2)*sin(theta_3))*(L1 + L2) - L1*cos(theta_1)*sin(theta_2)*sin(theta_3) + (L1*sin(theta_1)*(cos(theta_3) - sin(theta_3)*1i)*(cos(theta_3) - 1 + sin(theta_3)*1i)^2)/2;
+  double x = L1*sin(theta_3)*(sin(theta_0)*sin(theta_2) + cos(theta_0)*cos(theta_2)*sin(theta_1)) - (L1 + L2)*(sin(theta_0)*sin(theta_2)*sin(theta_3) - cos(theta_0)*cos(theta_1)*cos(theta_3) + cos(theta_0)*cos(theta_2)*sin(theta_1)*sin(theta_3)) - (L1*cos(theta_0)*cos(theta_1)*2*(cos(theta_3) - 1))/2;
+  double y = (L1 + L2)*(cos(theta_0)*sin(theta_2)*sin(theta_3) + cos(theta_1)*cos(theta_3)*sin(theta_0) - cos(theta_2)*sin(theta_0)*sin(theta_1)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*sin(theta_2) - cos(theta_2)*sin(theta_0)*sin(theta_1)) - (L1*cos(theta_1)*sin(theta_0)*2*(cos(theta_3) - 1))/2;
+  double z = L1*cos(theta_1)*cos(theta_2)*sin(theta_3) - (cos(theta_3)*sin(theta_1) + cos(theta_1)*cos(theta_2)*sin(theta_3))*(L1 + L2) + (L1*sin(theta_1)*2*(cos(theta_3) - 1))/2;
 
   imu::Vector<3> ret = imu::Vector<3>(x, y, z);
   return ret;

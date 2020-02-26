@@ -316,6 +316,8 @@ public:
 
   void calibrate();
 
+  void setOffsets();
+
   imu::Vector<3> getOffsetPitchYawRoll();
 
 private:

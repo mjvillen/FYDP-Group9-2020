@@ -1,5 +1,3 @@
-// https://github.com/denyssene/SimpleKalmanFilter
-
 #include <Wire.h>
 #include "Adafruit_Sensor.h"
 #include "Adafruit_BNO055.h"
@@ -26,6 +24,8 @@ const uint16_t greenLightPin = 12; // TODO: set LED pin
 const uint16_t blueLightPin = 13; // TODO: set LED pin
 const double L1 = 27; // TODO: Upper-arm Length
 const double L2 = 23; // TODO: Forearm Length
+const uint16_t CLOCK_PIN = 5; // encoder
+const uint16_t DATA_PIN = 6; // encoder
 
 // Instantiate BNO; id, address, &Wire
 Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28, &Wire1);
@@ -39,11 +39,37 @@ imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, doubl
   return imu::Vector<3>(x, y, z);
 }
 
-
 void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue) {
   analogWrite(redLightPin, redValue);
   analogWrite(greenLightPin, greenValue);
   analogWrite(blueLightPin, blueValue);
+}
+
+double getElbowAngle() {
+  // Initial clock high/low to indicate prep for read
+  digitalWrite(CLOCK_PIN, HIGH);
+  delayMicroseconds(1);
+  digitalWrite(CLOCK_PIN, LOW);
+  delayMicroseconds(1);
+
+  // read 16 bits into stream
+  byte stream[16] = {0.};
+  for (int i = 0; i < 16; i++)
+  {
+    // indicate new byte
+    digitalWrite(CLOCK_PIN, HIGH);
+    digitalWrite(CLOCK_PIN, LOW);
+    stream[i] = digitalRead(DATA_PIN);
+  }
+
+  // perform binary shift to pull raw value from binary stream
+  double value = 0;
+  for (int i = 0; i < 16; i++) {
+    value += stream[i]*(1 << (15-i));
+  }
+
+  // return normalized value converted to degrees
+  return ((value/65536) * 360);
 }
 
 void setup(void) {
@@ -51,10 +77,16 @@ void setup(void) {
 
   state = waitingCalibration;
 
+  // LED pin setup
   pinMode(buttonPin, INPUT);
   pinMode(redLightPin, OUTPUT);
   pinMode(greenLightPin, OUTPUT);
   pinMode(blueLightPin, OUTPUT);
+
+  // encoder pin setup
+  pinMode(CLOCK_PIN, OUTPUT);
+  pinMode(DATA_PIN, INPUT);
+  digitalWrite(CLOCK_PIN, HIGH);
 }
 
 void loop(void) {
@@ -110,21 +142,21 @@ void loop(void) {
           state = activeOperation;
           zeroed = false;
 
-          // TODO: elbow reading goes here
-          elbowOffset = 0;
+          // get Offsets
+          bnoShoulder.setOffsets();
+          elbowOffset = getElbowAngle();
         }
       }
       break;
 
     case activeOperation:    // Active operation - the button is pressed and the arm is currently tracking
       {
+        // Take readings
         imu::Vector<3> angles = bnoShoulder.getOffsetPitchYawRoll();
         double pitch = angles.x();
         double yaw = angles.y();
         double roll = angles.z();
-
-        // TODO: elbow reading goes here
-        double elbow = 0;
+        double elbow = getElbowAngle() - elbowOffset;
 
         // if we need to rezero the arm, get the new offset values and update zeroed bool
         if (!zeroed) {

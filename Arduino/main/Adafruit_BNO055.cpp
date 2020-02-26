@@ -913,12 +913,14 @@ void Adafruit_BNO055::calibrate() {
         Serial.print(" Accel="); Serial.print(accel, DEC); Serial.print(" Mag="); Serial.println(mag, DEC);
         delay(100);
     }
+}
 
-    sensors_event_t offsetOrientationData;
-    getEvent(&offsetOrientationData, Adafruit_BNO055::VECTOR_EULER);
-    pitchOffset = offsetOrientationData.orientation.pitch;
-    yawOffset = offsetOrientationData.orientation.heading;
-    rollOffset = offsetOrientationData.orientation.roll;
+void Adafruit_BNO055::setOffsets() {
+  sensors_event_t offsetOrientationData;
+  getEvent(&offsetOrientationData, Adafruit_BNO055::VECTOR_EULER);
+  pitchOffset = offsetOrientationData.orientation.pitch;
+  yawOffset = offsetOrientationData.orientation.heading;
+  rollOffset = offsetOrientationData.orientation.roll;
 }
 
 imu::Vector<3> Adafruit_BNO055::getOffsetPitchYawRoll() {

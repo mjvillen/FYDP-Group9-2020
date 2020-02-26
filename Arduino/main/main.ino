@@ -28,8 +28,8 @@ const double L1 = 27; // TODO: Upper-arm Length
 const double L2 = 23; // TODO: Forearm Length
 
 // Instantiate BNO; id, address, &Wire
-Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28);
-Adafruit_BNO055 bnoWrist = Adafruit_BNO055(55, 0x29);
+Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28, &Wire1);
+Adafruit_BNO055 bnoWrist = Adafruit_BNO055(55, 0x29, &Wire);
 
 imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
   double x = L1*sin(theta_3)*(sin(theta_0)*sin(theta_2) + cos(theta_0)*cos(theta_2)*sin(theta_1)) - (L1 + L2)*(sin(theta_0)*sin(theta_2)*sin(theta_3) - cos(theta_0)*cos(theta_1)*cos(theta_3) + cos(theta_0)*cos(theta_2)*sin(theta_1)*sin(theta_3)) - (L1*cos(theta_0)*cos(theta_1)*2*(cos(theta_3) - 1))/2;

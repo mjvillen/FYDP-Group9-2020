@@ -50,6 +50,7 @@ Adafruit_BNO055::Adafruit_BNO055(int32_t sensorID, uint8_t address,
   _wire = theWire;
 
   // Instantiate Butterworth HighPass (one filter per variable)
+  // TODO: do we need these still?
   buttHigh1 = FilterBuHp2();
   buttHigh2 = FilterBuHp2();
   buttHigh3 = FilterBuHp2();
@@ -902,11 +903,13 @@ bool Adafruit_BNO055::readLen(adafruit_bno055_reg_t reg, byte *buffer,
 void Adafruit_BNO055::calibrate() {
   if(!begin()) {
     /* There was a problem detecting the BNO055 ... check your connections */
+    // TODO: remove?
     Serial.print("NO IMU SENSOR DETECTED ... Check your wiring or I2C ADDR!");
     while(1);
   }
 
     int8_t temp = getTemp();
+    // TODO: remove?
     Serial.print("Current Temperature: "); Serial.print(temp); Serial.println(" C");
 
     setExtCrystalUse(true);
@@ -914,6 +917,7 @@ void Adafruit_BNO055::calibrate() {
     uint8_t system = 0, gyro = 0, accel = 0, mag = 0;
     while(system == 0) {
         getCalibration(&system, &gyro, &accel, &mag);
+        // TODO: remove?
         Serial.print("CALIBRATION: Sys="); Serial.print(system, DEC); Serial.print(" Gyro="); Serial.print(gyro, DEC);
         Serial.print(" Accel="); Serial.print(accel, DEC); Serial.print(" Mag="); Serial.println(mag, DEC);
         delay(100);
@@ -979,4 +983,22 @@ void Adafruit_BNO055::resetPosition() {
   xPos = 0, yPos = 0, zPos = 0,
   xVel = 0, yVel = 0, zVel = 0,
   xAcc = 0, yAcc = 0, zAcc = 0;
+}
+
+void Adafruit_BNO055::setOffsets() {
+  sensors_event_t offsetOrientationData;
+  getEvent(&offsetOrientationData, Adafruit_BNO055::VECTOR_EULER);
+  pitchOffset = offsetOrientationData.orientation.pitch;
+  yawOffset = offsetOrientationData.orientation.heading;
+  rollOffset = offsetOrientationData.orientation.roll;
+}
+
+imu::Vector<3> Adafruit_BNO055::getOffsetPitchYawRoll() {
+  sensors_event_t orientationData;
+  getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  double pitch = orientationData.orientation.pitch;
+  double yaw = orientationData.orientation.heading;
+  double roll = orientationData.orientation.roll;
+
+  return imu::Vector<3>(pitch - pitchOffset, yaw - yawOffset, roll - rollOffset);
 }

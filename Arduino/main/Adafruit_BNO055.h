@@ -320,6 +320,8 @@ public:
   imu::Vector<3> getPosition();
   imu::Vector<3> getEuler();
   void resetPosition();
+  void setOffsets();
+  imu::Vector<3> getOffsetPitchYawRoll();
 
 private:
   byte read8(adafruit_bno055_reg_t);
@@ -344,6 +346,9 @@ private:
   FilterBuHp2 buttHigh1;
   FilterBuHp2 buttHigh2;
   FilterBuHp2 buttHigh3;
+
+  // angular offsets
+  double pitchOffset, yawOffset, rollOffset;
 };
 
 #endif

@@ -939,9 +939,9 @@ void Adafruit_BNO055::updateReadings() {
   imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
 
   // update the current acceleration values
-  xAcc = Accel.x();
-  yAcc = Accel.y();
-  zAcc = Accel.z() - 9.81;
+  xAcc = Accel[0];
+  yAcc = Accel[1];
+  zAcc = Accel[2] - 9.81;
 
   // update the current velocity values
   xVel = xVel + buttHigh1.step(xAcc * DELTA_T);
@@ -956,19 +956,6 @@ void Adafruit_BNO055::updateReadings() {
   pitch = orientationData.orientation.pitch;
   yaw = orientationData.orientation.heading;
   roll = orientationData.orientation.roll;
-
-  Serial.print("POS: ");
-  Serial.print(xPos, 5);
-  Serial.print(" , ");
-  Serial.print(yPos, 5);
-  Serial.print(" , ");
-  Serial.println(zPos, 5);
-  Serial.print("EULER: ");
-  Serial.print(pitch, 5);
-  Serial.print(" , ");
-  Serial.print(yaw, 5);
-  Serial.print(" , ");
-  Serial.println(roll, 5);
 }
 
 imu::Vector<3> Adafruit_BNO055::getPosition() {

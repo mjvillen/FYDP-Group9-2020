@@ -2,7 +2,8 @@
 #include "Adafruit_Sensor.h"
 #include "Adafruit_BNO055.h"
 
-// GLOBAL VARIABLES
+
+///// GLOBAL VARIABLES /////
 bool calibrated = false;
 uint16_t buttonPressCount = 0;
 uint16_t buttonReleaseCount = 0;
@@ -20,7 +21,8 @@ double pitch = 0, yaw = 0, roll = 0;
 double xOffset = 0, yOffset = 0, zOffset = 0, elbowOffset = 0;
 bool zeroed = false;
 
-// CONSTANTS
+
+////// CONSTANTS /////
 const uint16_t SAMPLE_RATE = 10; // [ms]
 const uint16_t buttonPin = 7; // TODO: set button pin
 const uint16_t redLightPin= 11; // TODO: set LED pin
@@ -32,53 +34,23 @@ const double L2 = 23; // TODO: Forearm Length
 const uint16_t CLOCK_PIN = 5; // encoder
 const uint16_t DATA_PIN = 6; // encoder
 
-// Instantiate BNO; id, address, &Wire
+
+////// INSTANTIATE IMUS /////
 Adafruit_BNO055 bnoWrist1 = Adafruit_BNO055(55, 0x28, &Wire);
 Adafruit_BNO055 bnoWrist2 = Adafruit_BNO055(55, 0x29, &Wire);
 Adafruit_BNO055 bnoWrist3 = Adafruit_BNO055(55, 0x28, &Wire1);
 Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x29, &Wire1);
 
-imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
-  double x = L1*sin(theta_3)*(sin(theta_0)*sin(theta_2) + cos(theta_0)*cos(theta_2)*sin(theta_1)) - (L1 + L2)*(sin(theta_0)*sin(theta_2)*sin(theta_3) - cos(theta_0)*cos(theta_1)*cos(theta_3) + cos(theta_0)*cos(theta_2)*sin(theta_1)*sin(theta_3)) - (L1*cos(theta_0)*cos(theta_1)*2*(cos(theta_3) - 1))/2;
-  double y = (L1 + L2)*(cos(theta_0)*sin(theta_2)*sin(theta_3) + cos(theta_1)*cos(theta_3)*sin(theta_0) - cos(theta_2)*sin(theta_0)*sin(theta_1)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*sin(theta_2) - cos(theta_2)*sin(theta_0)*sin(theta_1)) - (L1*cos(theta_1)*sin(theta_0)*2*(cos(theta_3) - 1))/2;
-  double z = L1*cos(theta_1)*cos(theta_2)*sin(theta_3) - (cos(theta_3)*sin(theta_1) + cos(theta_1)*cos(theta_2)*sin(theta_3))*(L1 + L2) + (L1*sin(theta_1)*2*(cos(theta_3) - 1))/2;
 
-  return imu::Vector<3>(x, y, z);
-}
+////// FUNCTION DECLARATIONS /////
+double getElbowAngle();
+void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue);
+imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3);
+void printAngles(imu::Vector<3> eulerAngles, double elbow = -1);
+void printPosition(imu::Vector<3> position);
 
-void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue) {
-  analogWrite(redLightPin, redValue);
-  analogWrite(greenLightPin, greenValue);
-  analogWrite(blueLightPin, blueValue);
-}
 
-double getElbowAngle() {
-  // Initial clock high/low to indicate prep for read
-  digitalWrite(CLOCK_PIN, HIGH);
-  delayMicroseconds(1);
-  digitalWrite(CLOCK_PIN, LOW);
-  delayMicroseconds(1);
-
-  // read 16 bits into stream
-  byte stream[16] = {0.};
-  for (int i = 0; i < 16; i++)
-  {
-    // indicate new byte
-    digitalWrite(CLOCK_PIN, HIGH);
-    digitalWrite(CLOCK_PIN, LOW);
-    stream[i] = digitalRead(DATA_PIN);
-  }
-
-  // perform binary shift to pull raw value from binary stream
-  double value = 0;
-  for (int i = 0; i < 16; i++) {
-    value += stream[i]*(1 << (15-i));
-  }
-
-  // return normalized value converted to degrees
-  return ((value/65536) * 360);
-}
-
+///// SETUP /////
 void setup(void) {
   Serial.begin(115200);
 
@@ -96,6 +68,8 @@ void setup(void) {
   digitalWrite(CLOCK_PIN, HIGH);
 }
 
+
+///// MAIN LOOP /////
 void loop(void) {
   switch (state) {
     case waitingCalibration:    // Power on and wait for callibration
@@ -223,17 +197,19 @@ void loop(void) {
         /////////// Update Elbow Positions ////////////
         ///////////////////////////////////////////////
         imu::Vector<3> offsetAngles4 = bnoShoulder.getOffsetPitchYawRoll();
-        double pitch4 = offsetAngles4.x();
-        double yaw4 = offsetAngles4.y();
-        double roll4 = offsetAngles4.z();
+        double pitch4 = offsetAngles4[0];
+        double yaw4 = offsetAngles4[1];
+        double roll4 = offsetAngles4[2];
         double elbow = getElbowAngle() - elbowOffset;
+
+        printAngles(offsetAngles4, elbow);
 
         // if we need to rezero the arm, get the new offset values and update zeroed bool
         if (!zeroed) {
           imu::Vector<3> position4 = getPosition(pitch4, yaw4, roll4, elbow);
-          xOffset = position4.x();
-          yOffset = position4.y();
-          zOffset = position4.z();
+          xOffset = position4[0];
+          yOffset = position4[1];
+          zOffset = position4[2];
 
           zeroed = true;
         }
@@ -243,9 +219,11 @@ void loop(void) {
         imu::Vector<3> position4 = getPosition(pitch4, yaw4, roll4, elbow);
 
         // TODO: maybe delete - mostly here for debugs
-        double x = position4.x();
-        double y = position4.y();
-        double z = position4.z();
+        double x = position4[0];
+        double y = position4[1];
+        double z = position4[2];
+
+        printPosition(position4);
 
         // update the global position based on the current while considering the offset for start position
         // TODO: how to deal wiith position
@@ -253,12 +231,13 @@ void loop(void) {
         yPos += y - yOffset;
         zPos += z - zOffset;
 
+        printPosition(imu::Vector<3>(xPos, yPos, zPos));
+
         // update the global pitch, yaw roll
         // TODO: how to deal with angles
-        pitch = offsetAngles4.x();
-        yaw = offsetAngles4.y();
-        roll = offsetAngles4.z();
-
+        pitch = offsetAngles1[0];
+        yaw = offsetAngles1[1];
+        roll = offsetAngles1[2];
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -307,3 +286,70 @@ void loop(void) {
 
   } // end state loop
 } // end void loop
+
+
+////// FUNCTION DECLARATIONS //////
+imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
+  double x = L1*sin(theta_3)*(sin(theta_0)*sin(theta_2) + cos(theta_0)*cos(theta_2)*sin(theta_1)) - (L1 + L2)*(sin(theta_0)*sin(theta_2)*sin(theta_3) - cos(theta_0)*cos(theta_1)*cos(theta_3) + cos(theta_0)*cos(theta_2)*sin(theta_1)*sin(theta_3)) - (L1*cos(theta_0)*cos(theta_1)*2*(cos(theta_3) - 1))/2;
+  double y = (L1 + L2)*(cos(theta_0)*sin(theta_2)*sin(theta_3) + cos(theta_1)*cos(theta_3)*sin(theta_0) - cos(theta_2)*sin(theta_0)*sin(theta_1)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*sin(theta_2) - cos(theta_2)*sin(theta_0)*sin(theta_1)) - (L1*cos(theta_1)*sin(theta_0)*2*(cos(theta_3) - 1))/2;
+  double z = L1*cos(theta_1)*cos(theta_2)*sin(theta_3) - (cos(theta_3)*sin(theta_1) + cos(theta_1)*cos(theta_2)*sin(theta_3))*(L1 + L2) + (L1*sin(theta_1)*2*(cos(theta_3) - 1))/2;
+
+  return imu::Vector<3>(x, y, z);
+}
+
+void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue) {
+  analogWrite(redLightPin, redValue);
+  analogWrite(greenLightPin, greenValue);
+  analogWrite(blueLightPin, blueValue);
+}
+
+double getElbowAngle() {
+  // Initial clock high/low to indicate prep for read
+  digitalWrite(CLOCK_PIN, HIGH);
+  delayMicroseconds(1);
+  digitalWrite(CLOCK_PIN, LOW);
+  delayMicroseconds(1);
+
+  // read 16 bits into stream
+  byte stream[16] = {0.};
+  for (int i = 0; i < 16; i++)
+  {
+    // indicate new byte
+    digitalWrite(CLOCK_PIN, HIGH);
+    digitalWrite(CLOCK_PIN, LOW);
+    stream[i] = digitalRead(DATA_PIN);
+  }
+
+  // perform binary shift to pull raw value from binary stream
+  double value = 0;
+  for (int i = 0; i < 16; i++) {
+    value += stream[i]*(1 << (15-i));
+  }
+
+  // return normalized value converted to degrees
+  return ((value/65536) * 360);
+}
+
+void printAngles(imu::Vector<3> eulerAngles, double elbow) {
+  Serial.println("Angles:");
+  Serial.print(eulerAngles[0], 5);
+  Serial.print(" , ");
+  Serial.print(eulerAngles[1], 5);
+  Serial.print(" , ");
+  Serial.print(eulerAngles[2], 5);
+  if (elbow == -1) {
+    Serial.print(", ");
+    Serial.println(elbow, 5);
+  } else  {
+    Serial.println();
+  }
+}
+
+void printPosition(imu::Vector<3> position) {
+  Serial.println("Position:");
+  Serial.print(position[0], 5);
+  Serial.print(" , ");
+  Serial.print(position[1], 5);
+  Serial.print(" , ");
+  Serial.println(position[2], 5);
+}

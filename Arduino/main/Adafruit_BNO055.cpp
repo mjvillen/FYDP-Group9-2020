@@ -981,11 +981,5 @@ void Adafruit_BNO055::setOffsets() {
 }
 
 imu::Vector<3> Adafruit_BNO055::getOffsetPitchYawRoll() {
-  sensors_event_t orientationData;
-  getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  double pitch = orientationData.orientation.pitch;
-  double yaw = orientationData.orientation.heading;
-  double roll = orientationData.orientation.roll;
-
   return imu::Vector<3>(pitch - pitchOffset, yaw - yawOffset, roll - rollOffset);
 }

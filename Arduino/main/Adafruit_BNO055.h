@@ -318,10 +318,10 @@ public:
   void calibrate();
   void updateReadings();
   imu::Vector<3> getPosition();
-  imu::Vector<3> getEuler();
+  imu::Vector<3> getAngles();
   void resetPosition();
-  void setOffsets();
-  imu::Vector<3> getOffsetPitchYawRoll();
+  void setAngleOffsets();
+  imu::Vector<3> getOffsetAngles();
 
 private:
   byte read8(adafruit_bno055_reg_t);

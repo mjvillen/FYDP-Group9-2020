@@ -962,8 +962,9 @@ imu::Vector<3> Adafruit_BNO055::getPosition() {
   return imu::Vector<3> (xPos, yPos, zPos);
 }
 
-imu::Vector<3> Adafruit_BNO055::getEuler() {
-  return imu::Vector<3> (pitch, yaw, roll);
+imu::Vector<3> Adafruit_BNO055::getAngles() {
+  imu::Quaternion quat = getQuat();
+  return quat.toEuler();
 }
 
 void Adafruit_BNO055::resetPosition() {
@@ -972,14 +973,18 @@ void Adafruit_BNO055::resetPosition() {
   xAcc = 0, yAcc = 0, zAcc = 0;
 }
 
-void Adafruit_BNO055::setOffsets() {
-  sensors_event_t offsetOrientationData;
-  getEvent(&offsetOrientationData, Adafruit_BNO055::VECTOR_EULER);
-  pitchOffset = offsetOrientationData.orientation.pitch;
-  yawOffset = offsetOrientationData.orientation.heading;
-  rollOffset = offsetOrientationData.orientation.roll;
+void Adafruit_BNO055::setAngleOffsets() {
+  imu::Vector<3> angles = getAngles();
+  yawOffset = angles[0];
+  pitchOffset = angles[1];
+  rollOffset = angles[2];
 }
 
-imu::Vector<3> Adafruit_BNO055::getOffsetPitchYawRoll() {
+imu::Vector<3> Adafruit_BNO055::getOffsetAngles() {
+  imu::Vector<3> angles = getAngles();
+  yaw = angles[0];
+  pitch = angles[1];
+  roll = angles[2];
+
   return imu::Vector<3>(pitch - pitchOffset, yaw - yawOffset, roll - rollOffset);
 }

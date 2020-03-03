@@ -11,7 +11,7 @@ unsigned long tStart = 0;
 enum states {
   activeOperation,
   inactiveOperation,
-  waitingCalibration,
+  awaitingCalibration,
   calibrating,
   error
 };
@@ -36,8 +36,8 @@ const uint16_t DATA_PIN = 6; // encoder
 
 
 ////// INSTANTIATE IMUS /////
-// Adafruit_BNO055 bnoWrist1 = Adafruit_BNO055(55, 0x28, &Wire);
-// Adafruit_BNO055 bnoWrist2 = Adafruit_BNO055(55, 0x29, &Wire);
+Adafruit_BNO055 bnoWrist1 = Adafruit_BNO055(55, 0x28, &Wire);
+Adafruit_BNO055 bnoWrist2 = Adafruit_BNO055(55, 0x29, &Wire);
 Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28, &Wire);
 
 
@@ -53,7 +53,7 @@ void printPosition(imu::Vector<3> position);
 void setup(void) {
   Serial.begin(115200);
 
-  state = waitingCalibration;
+  state = awaitingCalibration;
 
   // LED pin setup
   pinMode(buttonPin, INPUT);
@@ -71,7 +71,7 @@ void setup(void) {
 ///// MAIN LOOP /////
 void loop(void) {
   switch (state) {
-    case waitingCalibration:    // Power on and wait for callibration
+    case awaitingCalibration:    // Power on and wait for callibration
       {
         if (!bnoShoulder.begin()) {
           Serial.print("No Shoulder BNO055 detected");
@@ -80,28 +80,29 @@ void loop(void) {
           break;
         }
 
-        // if (!bnoWrist1.begin()) {
-        //   Serial.print("No Wrist BNO055 (1) detected");
-        //   // TODO: throw a major error - recover?
-        //   state = error;
-        //   break;
-        // }
+        if (!bnoWrist1.begin()) {
+          Serial.print("No Wrist BNO055 (1) detected");
+          // TODO: throw a major error - recover?
+          state = error;
+          break;
+        }
 
-        // if (!bnoWrist2.begin()) {
-        //   Serial.print("No Wrist BNO055 (2) detected");
-        //   // TODO: throw a major error - recover?
-        //   state = error;
-        //   break;
-        // }
+        if (!bnoWrist2.begin()) {
+          Serial.print("No Wrist BNO055 (2) detected");
+          // TODO: throw a major error - recover?
+          state = error;
+          break;
+        }
 
         // indicate waiting for calibration
         RGBColor(0, 0, 255); // Blue
-        // Serial.println("Waiting for calibration");
+        Serial.println("Waiting for calibration");
 
         // wait for button press and release then switch to calibrating
         buttonPressCount = 0;
         while (digitalRead(buttonPin) == HIGH) {
           buttonPressCount++;
+          // TODO: we may need to tune this?
           if (buttonPressCount > buttonDebounce / 2) {
             state = calibrating;
           }
@@ -118,8 +119,8 @@ void loop(void) {
 
           // calibrate bno
           bnoShoulder.calibrate();
-          // bnoWrist1.calibrate();
-          // bnoWrist2.calibrate();
+          bnoWrist1.calibrate();
+          bnoWrist2.calibrate();
 
           calibrated = true;
         }
@@ -138,8 +139,8 @@ void loop(void) {
 
             // get Offsets
             bnoShoulder.setAngleOffsets();
-            // bnoWrist1.setAngleOffsets();
-            // bnoWrist2.setAngleOffsets();
+            bnoWrist1.setAngleOffsets();
+            bnoWrist2.setAngleOffsets();
             elbowOffset = getElbowAngle();
 
             break;
@@ -152,7 +153,7 @@ void loop(void) {
       {
         // indicate active operation
         RGBColor(0, 255, 0); // Green
-        // Serial.println("Active operation");
+        Serial.println("Active operation");
 
 
         ///////////////////////////////////////////////
@@ -162,13 +163,13 @@ void loop(void) {
         tStart = micros();
 
         // Get readings
-        // bnoWrist1.updateReadings();
-        // imu::Vector<3> position1 = bnoWrist1.getPosition();
-        // imu::Vector<3> offsetAngles1 = bnoWrist1.getOffsetAngles();
+        bnoWrist1.updateReadings();
+        imu::Vector<3> position1 = bnoWrist1.getPosition();
+        imu::Vector<3> offsetAngles1 = bnoWrist1.getOffsetAngles();
 
-        // bnoWrist2.updateReadings();
-        // imu::Vector<3> position2 = bnoWrist2.getPosition();
-        // imu::Vector<3> offsetAngles2 = bnoWrist2.getOffsetAngles();
+        bnoWrist2.updateReadings();
+        imu::Vector<3> position2 = bnoWrist2.getPosition();
+        imu::Vector<3> offsetAngles2 = bnoWrist2.getOffsetAngles();
 
 
         ///////////////////////////////////////////////
@@ -182,9 +183,11 @@ void loop(void) {
 
         printAngles(shoulderAngles, elbow);
 
+        // get the position from current readings
+        imu::Vector<3> kinematicsPosition = getPosition(shoulderPitch, shoulderYaw, shoulderRoll, elbow * DEG_TO_RAD);
+
         // if we need to rezero the arm, get the new offset values and update zeroed bool
         if (!zeroed) {
-          imu::Vector<3> kinematicsPosition = getPosition(shoulderPitch, shoulderYaw, shoulderRoll, elbow * DEG_TO_RAD);
           xOffset = kinematicsPosition[0];
           yOffset = kinematicsPosition[1];
           zOffset = kinematicsPosition[2];
@@ -192,16 +195,7 @@ void loop(void) {
           zeroed = true;
         }
 
-        // get the position from current readings
-        //  TODO: gets set twice initially
-        imu::Vector<3> kinematicsPosition = getPosition(shoulderPitch, shoulderYaw, shoulderRoll, elbow * DEG_TO_RAD);
-
-        // TODO: maybe delete - mostly here for debugs
-        double x = kinematicsPosition[0];
-        double y = kinematicsPosition[1];
-        double z = kinematicsPosition[2];
-
-        // printPosition(kinematicsPosition);
+        printPosition(kinematicsPosition);
 
         // update the global position based on the current while considering the offset for start position
         // TODO: how to deal wiith position
@@ -209,13 +203,13 @@ void loop(void) {
         yPos += y - yOffset;
         zPos += z - zOffset;
 
-        // printPosition(imu::Vector<3>(xPos, yPos, zPos));
+        printPosition(imu::Vector<3>(xPos, yPos, zPos));
 
         // update the global pitch, yaw roll
-        // TODO: how to deal with angles
-        // pitch = offsetAngles1[0];
-        // yaw = offsetAngles1[1];
-        // roll = offsetAngles1[2];
+        // TODO: how to deal with angles - Note: current implementation will have issues on edges (i.e. 180 vs. 0 -> average to 90 but we really want either or)
+        pitch = (offsetAngles1[0] + offsetAngles2[0]) / 2;
+        yaw = (offsetAngles1[1] + offsetAngles2[1]) / 2;
+        roll = (offsetAngles1[2] + offsetAngles2[2]) / 2;
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -309,12 +303,12 @@ double getElbowAngle() {
     value += stream[i]*(1 << (15-i));
   }
 
-  // return normalized value converted to degrees
-  return ((value/65536) * 360);
+  // return normalized value converted to radians
+  return ((value/65536) * 360 * DEG_TO_RAD);
 }
 
 void printAngles(imu::Vector<3> eulerAngles, double elbow) {
-  // Serial.println("Angles:");
+  Serial.print("Ang: ");
   Serial.print(eulerAngles[0] * RAD_TO_DEG, 5);
   Serial.print(" , ");
   Serial.print(eulerAngles[1] * RAD_TO_DEG, 5);
@@ -324,12 +318,12 @@ void printAngles(imu::Vector<3> eulerAngles, double elbow) {
     Serial.println();
   } else {
     Serial.print(", ");
-    Serial.println(elbow, 5);
+    Serial.println(elbow * RAD_TO_DEG, 5);
   }
 }
 
 void printPosition(imu::Vector<3> position) {
-  Serial.println("Position:");
+  Serial.print("Pos: ");
   Serial.print(position[0], 5);
   Serial.print(" , ");
   Serial.print(position[1], 5);

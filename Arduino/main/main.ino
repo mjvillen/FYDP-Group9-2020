@@ -199,9 +199,9 @@ void loop(void) {
 
         // update the global position based on the current while considering the offset for start position
         // TODO: how to deal wiith position
-        xPos += x - xOffset;
-        yPos += y - yOffset;
-        zPos += z - zOffset;
+        xPos += kinematicsPosition[0] - xOffset;
+        yPos += kinematicsPosition[1] - yOffset;
+        zPos += kinematicsPosition[2] - zOffset;
 
         printPosition(imu::Vector<3>(xPos, yPos, zPos));
 

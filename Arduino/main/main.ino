@@ -36,9 +36,9 @@ const uint16_t DATA_PIN = 6; // encoder
 
 
 ////// INSTANTIATE IMUS /////
-Adafruit_BNO055 bnoWrist1 = Adafruit_BNO055(55, 0x28, &Wire);
-Adafruit_BNO055 bnoWrist2 = Adafruit_BNO055(55, 0x29, &Wire);
-Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x29, &Wire1);
+// Adafruit_BNO055 bnoWrist1 = Adafruit_BNO055(55, 0x28, &Wire);
+// Adafruit_BNO055 bnoWrist2 = Adafruit_BNO055(55, 0x29, &Wire);
+Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28, &Wire);
 
 
 ////// FUNCTION DECLARATIONS /////
@@ -87,12 +87,12 @@ void loop(void) {
         //   break;
         // }
 
-        if (!bnoWrist2.begin()) {
-          Serial.print("No Wrist BNO055 (2) detected");
-          // TODO: throw a major error - recover?
-          state = error;
-          break;
-        }
+        // if (!bnoWrist2.begin()) {
+        //   Serial.print("No Wrist BNO055 (2) detected");
+        //   // TODO: throw a major error - recover?
+        //   state = error;
+        //   break;
+        // }
 
         // indicate waiting for calibration
         RGBColor(0, 0, 255); // Blue
@@ -114,19 +114,19 @@ void loop(void) {
         if (!calibrated) {
           // indicate calibrating
           RGBColor(255, 255, 0); // Yellow
-          // Serial.println("calibrating");
+          Serial.println("calibrating");
 
           // calibrate bno
           bnoShoulder.calibrate();
-          bnoWrist1.calibrate();
-          bnoWrist2.calibrate();
+          // bnoWrist1.calibrate();
+          // bnoWrist2.calibrate();
 
           calibrated = true;
         }
 
         // indicate calibration finished
         RGBColor(0, 255, 255); // Cyan
-        // Serial.println("calibration done");
+        Serial.println("calibration done");
 
         // wait for button press then switch to active operation
         buttonPressCount = 0;
@@ -138,8 +138,8 @@ void loop(void) {
 
             // get Offsets
             bnoShoulder.setAngleOffsets();
-            bnoWrist1.setAngleOffsets();
-            bnoWrist2.setAngleOffsets();
+            // bnoWrist1.setAngleOffsets();
+            // bnoWrist2.setAngleOffsets();
             elbowOffset = getElbowAngle();
 
             break;
@@ -162,13 +162,13 @@ void loop(void) {
         tStart = micros();
 
         // Get readings
-        bnoWrist1.updateReadings();
-        imu::Vector<3> position1 = bnoWrist1.getPosition();
-        imu::Vector<3> offsetAngles1 = bnoWrist1.getOffsetAngles();
+        // bnoWrist1.updateReadings();
+        // imu::Vector<3> position1 = bnoWrist1.getPosition();
+        // imu::Vector<3> offsetAngles1 = bnoWrist1.getOffsetAngles();
 
-        bnoWrist2.updateReadings();
-        imu::Vector<3> position2 = bnoWrist2.getPosition();
-        imu::Vector<3> offsetAngles2 = bnoWrist2.getOffsetAngles();
+        // bnoWrist2.updateReadings();
+        // imu::Vector<3> position2 = bnoWrist2.getPosition();
+        // imu::Vector<3> offsetAngles2 = bnoWrist2.getOffsetAngles();
 
 
         ///////////////////////////////////////////////
@@ -213,9 +213,9 @@ void loop(void) {
 
         // update the global pitch, yaw roll
         // TODO: how to deal with angles
-        pitch = offsetAngles1[0];
-        yaw = offsetAngles1[1];
-        roll = offsetAngles1[2];
+        // pitch = offsetAngles1[0];
+        // yaw = offsetAngles1[1];
+        // roll = offsetAngles1[2];
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -239,11 +239,11 @@ void loop(void) {
       {
         // indicate inactive operation
         RGBColor(255, 255, 255); // White
-        // Serial.println("inacttive operation");
+        Serial.println("inactive operation");
 
         // reset all position calculation variables
-        bnoWrist1.resetPosition();
-        bnoWrist2.resetPosition();
+        // bnoWrist1.resetPosition();
+        // bnoWrist2.resetPosition();
 
         // check for button press to switch to active operation
         buttonPressCount = 0;
@@ -314,12 +314,12 @@ double getElbowAngle() {
 }
 
 void printAngles(imu::Vector<3> eulerAngles, double elbow) {
-  Serial.println("Angles:");
-  Serial.print(eulerAngles[0] * DEG_TO_RAD, 5);
+  // Serial.println("Angles:");
+  Serial.print(eulerAngles[0] * RAD_TO_DEG, 5);
   Serial.print(" , ");
-  Serial.print(eulerAngles[1] * DEG_TO_RAD, 5);
+  Serial.print(eulerAngles[1] * RAD_TO_DEG, 5);
   Serial.print(" , ");
-  Serial.print(eulerAngles[2] * DEG_TO_RAD, 5);
+  Serial.print(eulerAngles[2] * RAD_TO_DEG, 5);
   if (elbow == -1) {
     Serial.print(", ");
     Serial.println(elbow, 5);

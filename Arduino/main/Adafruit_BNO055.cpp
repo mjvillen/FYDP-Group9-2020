@@ -975,16 +975,16 @@ void Adafruit_BNO055::resetPosition() {
 
 void Adafruit_BNO055::setAngleOffsets() {
   imu::Vector<3> angles = getAngles();
+  rollOffset = angles[1];
+  pitchOffset = angles[2];
   yawOffset = angles[0];
-  pitchOffset = angles[1];
-  rollOffset = angles[2];
 }
 
 imu::Vector<3> Adafruit_BNO055::getOffsetAngles() {
   imu::Vector<3> angles = getAngles();
+  roll = angles[1];
+  pitch = angles[2];
   yaw = angles[0];
-  pitch = angles[1];
-  roll = angles[2];
 
   return imu::Vector<3>(pitch - pitchOffset, yaw - yawOffset, roll - rollOffset);
 }

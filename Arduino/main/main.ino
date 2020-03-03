@@ -321,10 +321,10 @@ void printAngles(imu::Vector<3> eulerAngles, double elbow) {
   Serial.print(" , ");
   Serial.print(eulerAngles[2] * RAD_TO_DEG, 5);
   if (elbow == -1) {
+    Serial.println();
+  } else {
     Serial.print(", ");
     Serial.println(elbow, 5);
-  } else  {
-    Serial.println();
   }
 }
 

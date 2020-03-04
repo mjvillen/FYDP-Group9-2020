@@ -44,7 +44,8 @@ Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28, &Wire);
 ////// FUNCTION DECLARATIONS /////
 double getElbowAngle();
 void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue);
-imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3);
+imu::Vector<3> getHandPosition(double theta_0, double theta_1, double theta_2, double theta_3);
+imu::Vector<3> getElbowPosition(double theta_0, double theta_1);
 void printAngles(imu::Vector<3> eulerAngles, double elbow = -1);
 void printPosition(imu::Vector<3> position);
 
@@ -184,7 +185,7 @@ void loop(void) {
         printAngles(shoulderAngles, elbow);
 
         // get the position from current readings
-        imu::Vector<3> kinematicsPosition = getPosition(shoulderPitch, shoulderYaw, shoulderRoll, elbow * DEG_TO_RAD);
+        imu::Vector<3> kinematicsPosition = getHandPosition(shoulderPitch, shoulderYaw, shoulderRoll, elbow * DEG_TO_RAD);
 
         // if we need to rezero the arm, get the new offset values and update zeroed bool
         if (!zeroed) {
@@ -266,10 +267,18 @@ void loop(void) {
 
 
 ////// FUNCTION DECLARATIONS //////
-imu::Vector<3> getPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
+imu::Vector<3> getHandPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
   double x = L1*sin(theta_3)*(sin(theta_0)*sin(theta_2) + cos(theta_0)*cos(theta_2)*sin(theta_1)) - (L1 + L2)*(sin(theta_0)*sin(theta_2)*sin(theta_3) - cos(theta_0)*cos(theta_1)*cos(theta_3) + cos(theta_0)*cos(theta_2)*sin(theta_1)*sin(theta_3)) - (L1*cos(theta_0)*cos(theta_1)*2*(cos(theta_3) - 1))/2;
   double y = (L1 + L2)*(cos(theta_0)*sin(theta_2)*sin(theta_3) + cos(theta_1)*cos(theta_3)*sin(theta_0) - cos(theta_2)*sin(theta_0)*sin(theta_1)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*sin(theta_2) - cos(theta_2)*sin(theta_0)*sin(theta_1)) - (L1*cos(theta_1)*sin(theta_0)*2*(cos(theta_3) - 1))/2;
   double z = L1*cos(theta_1)*cos(theta_2)*sin(theta_3) - (cos(theta_3)*sin(theta_1) + cos(theta_1)*cos(theta_2)*sin(theta_3))*(L1 + L2) + (L1*sin(theta_1)*2*(cos(theta_3) - 1))/2;
+
+  return imu::Vector<3>(x, y, z);
+}
+
+imu::Vector<3> getElbowPosition(double theta_0, double theta_1) {
+  double x = L1*cos(theta_0)*cos(theta_1);
+  double y = L1*cos(theta_1)*sin(theta_0);
+  double z = -1*L1*sin(theta_1);
 
   return imu::Vector<3>(x, y, z);
 }

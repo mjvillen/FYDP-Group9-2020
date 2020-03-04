@@ -24,10 +24,10 @@ bool zeroed = false;
 
 ////// CONSTANTS /////
 const uint16_t SAMPLE_RATE = 10; // [ms]
-const uint16_t buttonPin = 7; // TODO: set button pin
-const uint16_t redLightPin= 11; // TODO: set LED pin
-const uint16_t greenLightPin = 12; // TODO: set LED pin
-const uint16_t blueLightPin = 13; // TODO: set LED pin
+const uint16_t buttonPin = 7;
+const uint16_t redLightPin= 11;
+const uint16_t greenLightPin = 12;
+const uint16_t blueLightPin = 13;
 const uint16_t buttonDebounce = 10;
 const double L1 = 29.0; // Upper-arm Length
 const double L2 = 22.4; // Forearm Length

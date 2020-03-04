@@ -185,7 +185,7 @@ void loop(void) {
         printAngles(shoulderAngles, elbow);
 
         // get the position from current readings
-        imu::Vector<3> kinematicsPosition = getHandPosition(shoulderPitch, shoulderYaw, shoulderRoll, elbow * DEG_TO_RAD);
+        imu::Vector<3> kinematicsPosition = getHandPosition(shoulderPitch, shoulderYaw, shoulderRoll, elbow);
 
         // if we need to rezero the arm, get the new offset values and update zeroed bool
         if (!zeroed) {

@@ -267,6 +267,19 @@ void loop(void) {
 
 
 ////// FUNCTION DECLARATIONS //////
+
+// Axis representatiton: neutral or zeroed position is along the x axis (arm extended straight infront).
+// All rotation is according to the right hand rule about the axis (thumb in direction of positive axis,
+// fingers curl in direction of positive rotation).
+//    y     x
+//    |    /
+//    |   /
+//    |  /
+//    | /
+//    |/_ _ _ _ _ z
+
+
+//                                    shoulderPitch   shoulderYaw     shoulderRoll    elbow
 imu::Vector<3> getHandPosition(double theta_0, double theta_1, double theta_2, double theta_3) {
   double x = L1*sin(theta_3)*(sin(theta_0)*sin(theta_2) + cos(theta_0)*cos(theta_2)*sin(theta_1)) - (L1 + L2)*(sin(theta_0)*sin(theta_2)*sin(theta_3) - cos(theta_0)*cos(theta_1)*cos(theta_3) + cos(theta_0)*cos(theta_2)*sin(theta_1)*sin(theta_3)) - (L1*cos(theta_0)*cos(theta_1)*2*(cos(theta_3) - 1))/2;
   double y = (L1 + L2)*(cos(theta_0)*sin(theta_2)*sin(theta_3) + cos(theta_1)*cos(theta_3)*sin(theta_0) - cos(theta_2)*sin(theta_0)*sin(theta_1)*sin(theta_3)) - L1*sin(theta_3)*(cos(theta_0)*sin(theta_2) - cos(theta_2)*sin(theta_0)*sin(theta_1)) - (L1*cos(theta_1)*sin(theta_0)*2*(cos(theta_3) - 1))/2;
@@ -275,6 +288,7 @@ imu::Vector<3> getHandPosition(double theta_0, double theta_1, double theta_2, d
   return imu::Vector<3>(x, y, z);
 }
 
+//                                     shoulderPitch   shoulderYaw
 imu::Vector<3> getElbowPosition(double theta_0, double theta_1) {
   double x = L1*cos(theta_0)*cos(theta_1);
   double y = L1*cos(theta_1)*sin(theta_0);

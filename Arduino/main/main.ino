@@ -258,11 +258,9 @@ void loop(void) {
 
     case error:    // Error state - something bad happened
       {
-        // TODO: Maybe split into minor / major?
-        // TODO: Some sort of error recovery?
-
         // indicate error
         RGBColor(255, 0, 0); // Red
+        Serial.println("Error");
       }
       break;
 

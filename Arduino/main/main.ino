@@ -5,6 +5,7 @@
 
 ///// GLOBAL VARIABLES /////
 bool calibrated = false;
+bool imusOn = false;
 uint16_t buttonPressCount = 0;
 uint16_t buttonReleaseCount = 0;
 unsigned long tStart = 0;
@@ -74,22 +75,26 @@ void loop(void) {
   switch (state) {
     case awaitingCalibration:    // Power on and wait for callibration
       {
-        if (!bnoShoulder.begin()) {
-          Serial.print("No Shoulder BNO055 detected");
-          state = error;
-          break;
-        }
+        if(!imusOn) {
+          if (!bnoShoulder.begin()) {
+            Serial.print("No Shoulder BNO055 detected");
+            state = error;
+            break;
+          }
 
-        if (!bnoWrist1.begin()) {
-          Serial.print("No Wrist BNO055 (1) detected");
-          state = error;
-          break;
-        }
+          if (!bnoWrist1.begin()) {
+            Serial.print("No Wrist BNO055 (1) detected");
+            state = error;
+            break;
+          }
 
-        if (!bnoWrist2.begin()) {
-          Serial.print("No Wrist BNO055 (2) detected");
-          state = error;
-          break;
+          if (!bnoWrist2.begin()) {
+            Serial.print("No Wrist BNO055 (2) detected");
+            state = error;
+            break;
+          }
+
+          imusOn = true;
         }
 
         // indicate waiting for calibration

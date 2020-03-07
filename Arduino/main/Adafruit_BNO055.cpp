@@ -901,13 +901,6 @@ bool Adafruit_BNO055::readLen(adafruit_bno055_reg_t reg, byte *buffer,
 }
 
 void Adafruit_BNO055::calibrate() {
-  if(!begin()) {
-    /* There was a problem detecting the BNO055 ... check your connections */
-    // TODO: remove?
-    Serial.print("NO IMU SENSOR DETECTED ... Check your wiring or I2C ADDR!");
-    while(1);
-  }
-
     int8_t temp = getTemp();
     // TODO: remove?
     Serial.print("Current Temperature: "); Serial.print(temp); Serial.println(" C");

@@ -36,9 +36,9 @@ const uint16_t DATA_PIN = 6; // encoder
 
 
 ////// INSTANTIATE IMUS /////
-Adafruit_BNO055 bnoWrist1 = Adafruit_BNO055(55, 0x28, &Wire);
-Adafruit_BNO055 bnoWrist2 = Adafruit_BNO055(55, 0x29, &Wire);
 Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28, &Wire);
+Adafruit_BNO055 bnoWrist1 = Adafruit_BNO055(55, 0x28, &Wire1);
+Adafruit_BNO055 bnoWrist2 = Adafruit_BNO055(55, 0x29, &Wire1);
 
 
 ////// FUNCTION DECLARATIONS /////
@@ -76,21 +76,18 @@ void loop(void) {
       {
         if (!bnoShoulder.begin()) {
           Serial.print("No Shoulder BNO055 detected");
-          // TODO: throw a major error - recover?
           state = error;
           break;
         }
 
         if (!bnoWrist1.begin()) {
           Serial.print("No Wrist BNO055 (1) detected");
-          // TODO: throw a major error - recover?
           state = error;
           break;
         }
 
         if (!bnoWrist2.begin()) {
           Serial.print("No Wrist BNO055 (2) detected");
-          // TODO: throw a major error - recover?
           state = error;
           break;
         }
@@ -103,7 +100,6 @@ void loop(void) {
         buttonPressCount = 0;
         while (digitalRead(buttonPin) == HIGH) {
           buttonPressCount++;
-          // TODO: we may need to tune this?
           if (buttonPressCount > buttonDebounce / 2) {
             state = calibrating;
           }
@@ -199,7 +195,7 @@ void loop(void) {
         printPosition(kinematicsPosition);
 
         // update the global position based on the current while considering the offset for start position
-        // TODO: how to deal wiith position
+        // TODO: how to deal with position
         xPos += kinematicsPosition[0] - xOffset;
         yPos += kinematicsPosition[1] - yOffset;
         zPos += kinematicsPosition[2] - zOffset;
@@ -207,10 +203,15 @@ void loop(void) {
         printPosition(imu::Vector<3>(xPos, yPos, zPos));
 
         // update the global pitch, yaw roll
-        // TODO: how to deal with angles - Note: current implementation will have issues on edges (i.e. 180 vs. 0 -> average to 90 but we really want either or)
-        pitch = (offsetAngles1[0] + offsetAngles2[0]) / 2;
-        yaw = (offsetAngles1[1] + offsetAngles2[1]) / 2;
-        roll = (offsetAngles1[2] + offsetAngles2[2]) / 2;
+        // TODO: how to deal with angles - Note: we may want to average, but will have issues on edges
+        // (i.e. 180 vs. 0 -> average to 90 but we want either or, 180 vs -180 -> average to 0 but we want either or)
+        // could do something like:
+        // `pitch = abs((offsetAngles1[0] + offsetAngles2[0]) / 2 - offsetAngles1[0]) > 5 ? offsetAngles1[0] : (offsetAngles1[0] + offsetAngles2[0]) / 2;`
+        pitch = offsetAngles1[0];
+        yaw = offsetAngles1[1];
+        roll = offsetAngles1[2];
+
+        printAngles(imu::Vector<3> (pitch, yaw, roll));
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -223,10 +224,13 @@ void loop(void) {
           }
         }
 
+        // double idleCount = 0;
         while ((micros() - tStart) < (SAMPLE_RATE * 1000)) {
           // poll until the next sample is ready
           // TODO: Make sure this is running fast enough
+          // idleCount++;
         }
+        // Serial.println(idleCount);
       }
       break;
 
@@ -237,8 +241,8 @@ void loop(void) {
         Serial.println("inactive operation");
 
         // reset all position calculation variables
-        // bnoWrist1.resetPosition();
-        // bnoWrist2.resetPosition();
+        bnoWrist1.resetPosition();
+        bnoWrist2.resetPosition();
 
         // check for button press to switch to active operation
         buttonPressCount = 0;

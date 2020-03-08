@@ -414,5 +414,5 @@ void sendToPanda(states state, imu::Vector<3> handPosition, imu::Vector<3> elbow
   Serial.print(handQuat.y());Serial.print(",");     // Hand Quat y
   Serial.print(handQuat.z());Serial.print(",");     // Hand Quat z
   Serial.print(closeButonState);Serial.print(",");  // Close button state - true -> pressed / false -> not pressed
-  Serial.print(openButonState);Serial.print(",");   // Open button state - true -> pressed / false -> not pressed
+  Serial.println(openButonState);                     // Open button state - true -> pressed / false -> not pressed
 }

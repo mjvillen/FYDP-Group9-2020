@@ -262,15 +262,6 @@ public:
         return Quaternion(_w * scalar, _x * scalar, _y * scalar, _z * scalar);
     }
 
-    Quaternion eulerToQuaternion(double pitch, double yaw, double roll) {
-        double qx = sin(roll/2) * cos(pitch/2) * cos(yaw/2) - cos(roll/2) * sin(pitch/2) * sin(yaw/2);
-        double qy = cos(roll/2) * sin(pitch/2) * cos(yaw/2) + sin(roll/2) * cos(pitch/2) * sin(yaw/2);
-        double qz = cos(roll/2) * cos(pitch/2) * sin(yaw/2) - sin(roll/2) * sin(pitch/2) * cos(yaw/2);
-        double qw = cos(roll/2) * cos(pitch/2) * cos(yaw/2) + sin(roll/2) * sin(pitch/2) * sin(yaw/2);
-
-        return Quaternion(qx, qy, qz, qw);
-    }
-
 private:
     double _w, _x, _y, _z;
 };

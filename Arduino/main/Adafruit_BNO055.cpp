@@ -979,5 +979,6 @@ imu::Vector<3> Adafruit_BNO055::getOffsetAngles() {
   pitch = angles[2];
   yaw = angles[0];
 
-  return imu::Vector<3>(pitch - pitchOffset, yaw - yawOffset, roll - rollOffset);
+  // TODO: The flipping angles here is only for the shoulder angles... may need to fix for Adrian
+  return imu::Vector<3>(-1*(pitch - pitchOffset), yaw - yawOffset, -1*(roll - rollOffset));
 }

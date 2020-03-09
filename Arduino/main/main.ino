@@ -51,7 +51,7 @@ double getElbowAngle();
 void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue);
 imu::Vector<3> getPosition(imu::Quaternion shoulderQuat, double elbow);
 void printPosition(imu::Vector<3> position);
-void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion handQuat, bool closeButtonState, bool openButtonState);
+void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState);
 
 
 ///// SETUP /////
@@ -200,9 +200,7 @@ void loop(void) {
         currYPos = yPos + handPosition[1] - yOffset;
         currZPos = zPos + handPosition[2] - zOffset;
 
-        // printPosition(imu::Vector<3>(currXPos, currYPos, currZPos));
-
-        sendToPanda(state, handPosition, wristQuat, closeButonState, openButonState);
+        sendToPanda(state, imu::Vector<3>(currXPos, currYPos, currZPos), wristQuat, closeButonState, openButonState);
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -320,15 +318,20 @@ void printPosition(imu::Vector<3> position) {
   Serial.println(position[2], 5);
 }
 
-void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion handQuat, bool closeButtonState, bool openButtonState) {
+void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState) {
+
+  imu::Quaternion wristOffset = imu::Quaternion (-0.03763, 0.99512, -.046895, 0.078191);
+  wristQuat = wristQuat * wristOffset.inv();
+
+
   Serial.print(state);Serial.print(",");            // Current operating state
-  Serial.print(handPosition[0]);Serial.print(",");  // Hand X
-  Serial.print(handPosition[1]);Serial.print(",");  // Hand Y
-  Serial.print(handPosition[2]);Serial.print(",");  // Hand Z
-  Serial.print(handQuat.w());Serial.print(",");     // Hand Quat w
-  Serial.print(handQuat.x());Serial.print(",");     // Hand Quat x
-  Serial.print(handQuat.y());Serial.print(",");     // Hand Quat y
-  Serial.print(handQuat.z());Serial.print(",");     // Hand Quat z
+  Serial.print(handPosition[0]/100, 5);Serial.print(",");  // Hand X
+  Serial.print(handPosition[1]/100, 5);Serial.print(",");  // Hand Y
+  Serial.print(handPosition[2]/100, 5);Serial.print(",");  // Hand Z
+  Serial.print(wristQuat.w());Serial.print(",");     // Hand Quat w
+  Serial.print(wristQuat.x());Serial.print(",");     // Hand Quat x
+  Serial.print(wristQuat.y());Serial.print(",");     // Hand Quat y
+  Serial.print(wristQuat.z());Serial.print(",");     // Hand Quat z
   Serial.print(closeButonState);Serial.print(",");  // Close button state - true -> pressed / false -> not pressed
   Serial.println(openButonState);                   // Open button state - true -> pressed / false -> not pressed
 }

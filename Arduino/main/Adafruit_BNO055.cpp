@@ -48,12 +48,6 @@ Adafruit_BNO055::Adafruit_BNO055(int32_t sensorID, uint8_t address,
   _sensorID = sensorID;
   _address = address;
   _wire = theWire;
-
-  // Instantiate Butterworth HighPass (one filter per variable)
-  // TODO: do we need these still?
-  buttHigh1 = FilterBuHp2();
-  buttHigh2 = FilterBuHp2();
-  buttHigh3 = FilterBuHp2();
 }
 
 /*!
@@ -917,68 +911,17 @@ void Adafruit_BNO055::calibrate() {
     }
 }
 
-void Adafruit_BNO055::updateReadings() {
-  // Instantiate HighPass; cutoffFrequency/samplingFrequency (one filter per variable)
-  // HighPassFilter highPassFilter(0.1 / (1000/SAMPLE_RATE));
-
-  // create events and poll data
-  sensors_event_t orientationData, accelData;
-  getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  getEvent(&accelData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-
-  // perform quaternion math to linearize acceleration
+void Adafruit_BNO055::setQuaternionOffsets() {
   imu::Quaternion quat = getQuat();
-  imu::Quaternion quatConj = quat.conjugate();
-  imu::Vector<3> Accel = quat.rotateVector(imu::Vector<3> (accelData.acceleration.x, accelData.acceleration.y, accelData.acceleration.z));
-
-  // update the current acceleration values
-  xAcc = Accel[0];
-  yAcc = Accel[1];
-  zAcc = Accel[2] - 9.81;
-
-  // update the current velocity values
-  xVel = xVel + buttHigh1.step(xAcc * DELTA_T);
-  yVel = yVel + buttHigh2.step(yAcc * DELTA_T);
-  zVel = zVel + buttHigh3.step(zAcc * DELTA_T);
-
-  // update the current position values
-  xPos = xPos + (xVel * DELTA_T);
-  yPos = yPos + (yVel * DELTA_T);
-  zPos = zPos + (zVel * DELTA_T);
-
-  pitch = orientationData.orientation.pitch;
-  yaw = orientationData.orientation.heading;
-  roll = orientationData.orientation.roll;
+  wOffset = quat.w();
+  xOffset = quat.x();
+  yOffset = quat.y();
+  zOffset = quat.z();
 }
 
-imu::Vector<3> Adafruit_BNO055::getPosition() {
-  return imu::Vector<3> (xPos, yPos, zPos);
-}
-
-imu::Vector<3> Adafruit_BNO055::getAngles() {
+imu::Quaternion Adafruit_BNO055::getOffsetQuat() {
+  imu::Quaternion quatOffset = imu::Quaternion(wOffset, xOffset, yOffset, zOffset);
   imu::Quaternion quat = getQuat();
-  return quat.toEuler();
-}
 
-void Adafruit_BNO055::resetPosition() {
-  xPos = 0, yPos = 0, zPos = 0,
-  xVel = 0, yVel = 0, zVel = 0,
-  xAcc = 0, yAcc = 0, zAcc = 0;
-}
-
-void Adafruit_BNO055::setAngleOffsets() {
-  imu::Vector<3> angles = getAngles();
-  rollOffset = angles[1];
-  pitchOffset = angles[2];
-  yawOffset = angles[0];
-}
-
-imu::Vector<3> Adafruit_BNO055::getOffsetAngles() {
-  imu::Vector<3> angles = getAngles();
-  roll = angles[1];
-  pitch = angles[2];
-  yaw = angles[0];
-
-  // TODO: The flipping angles here is only for the shoulder angles... may need to fix for Adrian
-  return imu::Vector<3>(-1*(pitch - pitchOffset), yaw - yawOffset, -1*(roll - rollOffset));
+  return (quat * quatOffset.inv());
 }

@@ -95,6 +95,11 @@ public:
         return Quaternion(_w, -_x, -_y, -_z);
     }
 
+    Quaternion inv() const
+    {
+        return (this->conjugate() / this->magnitude());
+    }
+
     void fromAxisAngle(const Vector<3>& axis, double theta)
     {
         _w = cos(theta/2);

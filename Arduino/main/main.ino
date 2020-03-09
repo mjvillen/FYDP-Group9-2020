@@ -8,7 +8,7 @@ bool calibrated = false;
 bool imusOn = false;
 bool closeButonState = false;
 bool openButonState = false;
-uint16_t butttonCounter = 0;
+uint16_t buttonCounter = 0;
 uint16_t buttonPressCount = 0;
 uint16_t buttonReleaseCount = 0;
 unsigned long tStart = 0;
@@ -56,7 +56,7 @@ void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wris
 
 ///// SETUP /////
 void setup(void) {
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   state = awaitingCalibration;
 
@@ -160,11 +160,11 @@ void loop(void) {
         ///////////////////////////////////////////////
         //////// Check Gripper Buttons / State ////////
         ///////////////////////////////////////////////
-        butttonCounter++;
-        if (butttonCounter >= buttonDebounce) {
-          closeButonState = digitalRead(closeButtonPin);
-          openButonState = digitalRead(openButtonPin);
-          butttonCounter = 0;
+        buttonCounter++;
+        if (buttonCounter >= buttonDebounce) {
+          closeButonState = !digitalRead(closeButtonPin);
+          openButonState = !digitalRead(openButtonPin);
+          buttonCounter = 0;
         }
 
 

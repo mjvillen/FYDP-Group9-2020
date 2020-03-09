@@ -319,10 +319,8 @@ void printPosition(imu::Vector<3> position) {
 }
 
 void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState) {
-
   imu::Quaternion wristOffset = imu::Quaternion (-0.03763, 0.99512, -.046895, 0.078191);
   wristQuat = wristQuat * wristOffset.inv();
-
 
   Serial.print(state);Serial.print(",");            // Current operating state
   Serial.print(handPosition[0]/100, 5);Serial.print(",");  // Hand X

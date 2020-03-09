@@ -319,17 +319,17 @@ void printPosition(imu::Vector<3> position) {
 }
 
 void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState) {
-  imu::Quaternion wristOffset = imu::Quaternion (-0.03763, 0.99512, -.046895, 0.078191);
-  wristQuat = wristQuat * wristOffset.inv();
+  imu::Quaternion wristOffset = imu::Quaternion (-1*0.03763, 0.99512, -1*0.046895, 0.078191); // Stable quat offset from Panda arm
+  wristQuat = wristQuat * wristOffset;
 
-  Serial.print(state);Serial.print(",");            // Current operating state
-  Serial.print(handPosition[0]/100, 5);Serial.print(",");  // Hand X
-  Serial.print(handPosition[1]/100, 5);Serial.print(",");  // Hand Y
-  Serial.print(handPosition[2]/100, 5);Serial.print(",");  // Hand Z
-  Serial.print(wristQuat.w());Serial.print(",");     // Hand Quat w
-  Serial.print(wristQuat.x());Serial.print(",");     // Hand Quat x
-  Serial.print(wristQuat.y());Serial.print(",");     // Hand Quat y
-  Serial.print(wristQuat.z());Serial.print(",");     // Hand Quat z
-  Serial.print(closeButonState);Serial.print(",");  // Close button state - true -> pressed / false -> not pressed
-  Serial.println(openButonState);                   // Open button state - true -> pressed / false -> not pressed
+  Serial.print(state);Serial.print(",");                    // Current operating state
+  Serial.print(handPosition[0]/100, 5);Serial.print(",");   // Hand X
+  Serial.print(handPosition[1]/100, 5);Serial.print(",");   // Hand Y
+  Serial.print(handPosition[2]/100, 5);Serial.print(",");   // Hand Z
+  Serial.print(wristQuat.w());Serial.print(",");            // Wrist Quat w
+  Serial.print(wristQuat.x());Serial.print(",");            // Wrist Quat x
+  Serial.print(wristQuat.y());Serial.print(",");            // Wrist Quat y
+  Serial.print(wristQuat.z());Serial.print(",");            // Wrist Quat z
+  Serial.print(closeButonState);Serial.print(",");          // Close button state - true -> pressed / false -> not pressed
+  Serial.println(openButonState);                           // Open button state - true -> pressed / false -> not pressed
 }

@@ -339,7 +339,7 @@ private:
   const double DELTA_T = (double)(SAMPLE_RATE) / 1000.0; // [s]
 
   // Quat offsets
-  double wOffset, xOffset, yOffset, zOffset;
+  imu::Quaternion quatOffset;
 };
 
 #endif

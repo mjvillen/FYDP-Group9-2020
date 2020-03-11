@@ -912,20 +912,17 @@ void Adafruit_BNO055::calibrate() {
 }
 
 void Adafruit_BNO055::setQuaternionOffsets() {
-  imu::Quaternion quat = getQuat();
-  wOffset = quat.w();
-  xOffset = quat.x();
-  yOffset = quat.y();
-  zOffset = quat.z();
+  quatOffset = getQuat();
+  quatOffset.normalize();
 }
 
 imu::Quaternion Adafruit_BNO055::getOffsetQuat() {
-  imu::Quaternion quatOffset = imu::Quaternion(wOffset, xOffset, yOffset, zOffset);
   imu::Quaternion quat = getQuat();
-
+  quat.normalize();
   return (quat * quatOffset.inv());
 }
 
 void Adafruit_BNO055::remapAxis() {
   setAxisRemap(REMAP_CONFIG_P0);
+  setAxisSign(REMAP_SIGN_P0);
 }

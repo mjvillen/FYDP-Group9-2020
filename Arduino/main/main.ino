@@ -269,13 +269,13 @@ void loop(void) {
 
 
 imu::Vector<3> getPosition(imu::Quaternion quat, double elbow) {
-  imu::Vector<3> elbowVec = imu::Vector<3> (0, L1, 0);
+  imu::Vector<3> elbowVec = imu::Vector<3> (L1, 0, 0);
   elbowVec = quat.rotateVector(elbowVec);
 
-  imu::Vector<3> handVec = imu::Vector<3> (L2*sin(elbow), L2*cos(elbow), 0);
+  imu::Vector<3> handVec = imu::Vector<3> (L2*cos(-1*elbow), L2*sin(-1*elbow), 0);
   handVec = quat.rotateVector(handVec);
 
-  return imu::Vector<3> ((elbowVec[1] + handVec[1]), -1*(elbowVec[0] + handVec[0]), -1*(elbowVec[2] + handVec[2]));
+  return imu::Vector<3> ((elbowVec[0] + handVec[0]), (elbowVec[1] + handVec[1]), (elbowVec[2] + handVec[2]));
 }
 
 void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue) {
@@ -323,7 +323,7 @@ void printPosition(imu::Vector<3> position) {
 void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState) {
   // Some Quaternion matht to first rotate the quaternion to the correct axis representation around the y axis by 90 degrees
   // We then rotate the quaternion by the inverse of the predefined Panda offsets.
-  wristQuat = (wristQuat * imu::Quaternion(0.7071, 0, 0.7071, 0)) * imu::Quaternion(-1*0.03763, 0.99512, -1*0.046895, 0.078191).inv();
+  wristQuat = wristQuat * imu::Quaternion(0.99512, -1*0.046895, 0.078191, -1*0.03763).inv();
 
   Serial.print(state);Serial.print(",");                    // Current operating state
   Serial.print(handPosition[0]/100, 5);Serial.print(",");   // Hand X

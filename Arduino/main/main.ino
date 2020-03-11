@@ -102,7 +102,9 @@ void loop(void) {
 
         // indicate waiting for calibration
         RGBColor(0, 0, 255); // Blue
-        Serial.println("Waiting for calibration");
+        // Serial.println("Waiting for calibration");
+        Serial.println("0,0,0,0,0");
+
 
         // wait for button press and release then switch to calibrating
         buttonPressCount = 0;
@@ -120,7 +122,8 @@ void loop(void) {
         if (!calibrated) {
           // indicate calibrating
           RGBColor(255, 255, 0); // Yellow
-          Serial.println("calibrating");
+          // Serial.println("calibrating");
+          Serial.println("100,100,100,100,100");
 
           // calibrate bno
           bnoShoulder.calibrate();
@@ -131,7 +134,8 @@ void loop(void) {
 
         // indicate calibration finished
         RGBColor(0, 255, 255); // Cyan
-        Serial.println("calibration done");
+        // Serial.println("calibration done");
+        Serial.println("0,0,0,0,0");
 
         // wait for button press then switch to active operation
         buttonPressCount = 0;
@@ -202,7 +206,15 @@ void loop(void) {
         currYPos = yPos + handPosition[1] - yOffset;
         currZPos = zPos + handPosition[2] - zOffset;
 
-        sendToPanda(state, imu::Vector<3>(currXPos, currYPos, currZPos), wristQuat, closeButonState, openButonState);
+        // sendToPanda(state, imu::Vector<3>(currXPos, currYPos, currZPos), wristQuat, closeButonState, openButonState);
+
+        Serial.print(shoulderQuat.w());Serial.print(",");
+        Serial.print(shoulderQuat.x());Serial.print(",");
+        Serial.print(shoulderQuat.y());Serial.print(",");
+        Serial.print(shoulderQuat.z());Serial.print(",");
+        Serial.println(elbow);
+
+        // printPosition(imu::Vector<3> (currXPos, currYPos, currZPos));
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -220,7 +232,7 @@ void loop(void) {
 
         // while ((micros() - tStart) < (SAMPLE_RATE * 1000)) {
           // poll until the next sample is ready
-          // TODO: Slow down for Panda - Mabye swap to sample at full speed then print att slower speed?
+          // TODO: Slow down for Panda - Mabye swap to sample at full speed then print at slower speed?
         // }
       }
       break;
@@ -229,7 +241,8 @@ void loop(void) {
       {
         // indicate inactive operation
         RGBColor(255, 255, 255); // White
-        Serial.println("inactive operation");
+        // Serial.println("inactive operation");
+        Serial.println("100,100,100,100,100");
 
         // check for button press to switch to active operation
         buttonPressCount = 0;

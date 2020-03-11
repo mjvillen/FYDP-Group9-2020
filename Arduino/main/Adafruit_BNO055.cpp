@@ -897,7 +897,7 @@ bool Adafruit_BNO055::readLen(adafruit_bno055_reg_t reg, byte *buffer,
 void Adafruit_BNO055::calibrate() {
     int8_t temp = getTemp();
     // TODO: remove?
-    Serial.print("Current Temperature: "); Serial.print(temp); Serial.println(" C");
+    // Serial.print("Current Temperature: "); Serial.print(temp); Serial.println(" C");
 
     setExtCrystalUse(true);
 
@@ -905,18 +905,22 @@ void Adafruit_BNO055::calibrate() {
     while(system == 0) {
         getCalibration(&system, &gyro, &accel, &mag);
         // TODO: remove?
-        Serial.print("CALIBRATION: Sys="); Serial.print(system, DEC); Serial.print(" Gyro="); Serial.print(gyro, DEC);
-        Serial.print(" Accel="); Serial.print(accel, DEC); Serial.print(" Mag="); Serial.println(mag, DEC);
+        // Serial.print("CALIBRATION: Sys="); Serial.print(system, DEC); Serial.print(" Gyro="); Serial.print(gyro, DEC);
+        // Serial.print(" Accel="); Serial.print(accel, DEC); Serial.print(" Mag="); Serial.println(mag, DEC);
+        Serial.println("100,100,100,100,100");
         delay(100);
     }
 }
 
 void Adafruit_BNO055::setQuaternionOffsets() {
   quatOffset = getQuat();
+  quatOffset.normalize();
 }
 
 imu::Quaternion Adafruit_BNO055::getOffsetQuat() {
-  return (getQuat() * quatOffset.inv());
+  imu::Quaternion quat = getQuat();
+  quat.normalize();
+  return (quatOffset.inv() * quat);
 }
 
 void Adafruit_BNO055::remapAxis() {

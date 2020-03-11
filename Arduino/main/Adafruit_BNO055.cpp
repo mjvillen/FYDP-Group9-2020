@@ -916,8 +916,7 @@ void Adafruit_BNO055::setQuaternionOffsets() {
 }
 
 imu::Quaternion Adafruit_BNO055::getOffsetQuat() {
-  imu::Quaternion quat = getQuat();
-  return (quat * quatOffset.inv());
+  return (getQuat() * quatOffset.inv());
 }
 
 void Adafruit_BNO055::remapAxis() {

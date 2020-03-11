@@ -220,7 +220,7 @@ void loop(void) {
 
         // while ((micros() - tStart) < (SAMPLE_RATE * 1000)) {
           // poll until the next sample is ready
-          // TODO: Slow down for Panda - Mabye swap to sample at full speed then print att slower speed?
+          // TODO: Slow down for Panda - Mabye swap to sample at full speed then print at slower speed?
         // }
       }
       break;

@@ -88,12 +88,14 @@ void loop(void) {
             state = error;
             break;
           }
+          bnoShoulder.remapAxis();
 
           if (!bnoWrist.begin()) {
             Serial.print("No Wrist BNO055 (1) detected");
             state = error;
             break;
           }
+          bnoWrist.remapAxis();
 
           imusOn = true;
         }

@@ -913,10 +913,13 @@ void Adafruit_BNO055::calibrate() {
 
 void Adafruit_BNO055::setQuaternionOffsets() {
   quatOffset = getQuat();
+  quatOffset.normalize();
 }
 
 imu::Quaternion Adafruit_BNO055::getOffsetQuat() {
-  return (getQuat() * quatOffset.inv());
+  imu::Quaternion quat = getQuat();
+  quat.normalize();
+  return (quatOffset.inv() * quat);
 }
 
 void Adafruit_BNO055::remapAxis() {

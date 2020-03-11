@@ -905,20 +905,19 @@ void Adafruit_BNO055::calibrate() {
     while(system == 0) {
         getCalibration(&system, &gyro, &accel, &mag);
         // TODO: remove?
-        Serial.print("CALIBRATION: Sys="); Serial.print(system, DEC); Serial.print(" Gyro="); Serial.print(gyro, DEC);
-        Serial.print(" Accel="); Serial.print(accel, DEC); Serial.print(" Mag="); Serial.println(mag, DEC);
+        // Serial.print("CALIBRATION: Sys="); Serial.print(system, DEC); Serial.print(" Gyro="); Serial.print(gyro, DEC);
+        // Serial.print(" Accel="); Serial.print(accel, DEC); Serial.print(" Mag="); Serial.println(mag, DEC);
+        Serial.println("100,100,100,100,100");
         delay(100);
     }
 }
 
 void Adafruit_BNO055::setQuaternionOffsets() {
   quatOffset = getQuat();
-  quatOffset.normalize();
 }
 
 imu::Quaternion Adafruit_BNO055::getOffsetQuat() {
   imu::Quaternion quat = getQuat();
-  quat.normalize();
   return (quat * quatOffset.inv());
 }
 

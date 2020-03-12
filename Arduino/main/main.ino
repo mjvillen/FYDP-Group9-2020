@@ -64,7 +64,7 @@ void setup(void) {
   // Button pin setup
   pinMode(mainButtonPin, INPUT);
   pinMode(gripperButtonPin, INPUT);
-  pinMode(closeButtonPin, INPUT);
+  pinMode(gripperButtonPin, INPUT);
 
   // LED pin setup
   pinMode(redLightPin, OUTPUT);
@@ -213,7 +213,7 @@ void loop(void) {
         ///////////////////////////////////////////////
         buttonCounter++;
         if (buttonCounter >= buttonDebounce) {
-          gripperButtonState = !digitalRead(closeButtonPin);
+          gripperButtonState = !digitalRead(gripperButtonPin);
 
           if (digitalRead(homeButtonPin) == LOW) {
             xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed

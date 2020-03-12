@@ -31,7 +31,7 @@ bool zeroed = false;
 const uint16_t SAMPLE_RATE = 10; // [ms]
 const uint16_t mainButtonPin = 10;
 const uint16_t gripperButtonPin = 8;
-const uint16_t closeButtonPin = 9;
+const uint16_t homeButtonPin = 9;
 const uint16_t redLightPin= 11;
 const uint16_t greenLightPin = 12;
 const uint16_t blueLightPin = 13;
@@ -164,18 +164,10 @@ void loop(void) {
 
 
         ///////////////////////////////////////////////
-        //////// Check Gripper Buttons / State ////////
+        ////////////// Check Panda State //////////////
         ///////////////////////////////////////////////
-        buttonCounter++;
-        if (buttonCounter >= buttonDebounce) {
-          gripperButtonState = !digitalRead(closeButtonPin);
-          buttonCounter = 0;
-        }
+        // TODO: Adrians code
 
-//        if (digitalRead(gripperButtonPin) == LOW) {
-//          xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
-//          xOffset = 0, yOffset = 0, zOffset = 0;
-//        }
 
 
         ///////////////////////////////////////////////
@@ -188,7 +180,7 @@ void loop(void) {
         // imu::Quaternion wristQuat = bnoWrist.getOffsetQuat();
 
         ///////////////////////////////////////////////
-        /////////// Update Elbow Positions ////////////
+        ////////////// Update Positions ///////////////
         ///////////////////////////////////////////////
         imu::Quaternion shoulderQuat = bnoShoulder.getOffsetQuat();
         double elbow = getElbowAngle() - elbowOffset;
@@ -215,6 +207,20 @@ void loop(void) {
         // wristQuat = quat * wristQuat;
 
         sendToPanda(state, imu::Vector<3>(currXPos, currYPos, currZPos), gripperButtonState, homeButtonState); // , wristQuat);
+
+        ///////////////////////////////////////////////
+        //////// Check Gripper Buttons / State ////////
+        ///////////////////////////////////////////////
+        buttonCounter++;
+        if (buttonCounter >= buttonDebounce) {
+          gripperButtonState = !digitalRead(closeButtonPin);
+
+          if (digitalRead(homeButtonPin) == LOW) {
+            xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
+            xOffset = handPosition[0], yOffset = handPosition[1], zOffset = handPosition[2];
+          }
+          buttonCounter = 0;
+        }
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;

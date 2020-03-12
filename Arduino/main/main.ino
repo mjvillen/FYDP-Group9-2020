@@ -29,7 +29,7 @@ imu::Quaternion quat = imu::Quaternion(1,0,0,0);
 
 ////// CONSTANTS /////
 const uint16_t SAMPLE_RATE = 10; // [ms]
-const uint16_t mainButtonPin = 7;
+const uint16_t mainButtonPin = 10;
 const uint16_t openButtonPin = 8;
 const uint16_t closeButtonPin = 9;
 const uint16_t redLightPin= 11;
@@ -98,8 +98,6 @@ void loop(void) {
             break;
           }
           // Adrian's Orientation Mapping 
-//          bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P6);
-//          bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P6);
           bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P3);
           bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P3);
 
@@ -175,6 +173,11 @@ void loop(void) {
           buttonCounter = 0;
         }
 
+//        if (digitalRead(openButtonPin) == LOW) {
+//          xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
+//          xOffset = 0, yOffset = 0, zOffset = 0;
+//        }
+
 
         ///////////////////////////////////////////////
         ////////// Update Absolute Positions //////////
@@ -224,14 +227,13 @@ void loop(void) {
             xPos = currXPos;
             yPos = currYPos;
             zPos = currZPos;
-            quat = wristQuat;
             break;
           }
         }
 
         // while ((micros() - tStart) < (SAMPLE_RATE * 1000)) {
           // poll until the next sample is ready
-          // TODO: Slow down for Panda - Mabye swap to sample at full speed then print at slower speed?
+          // TODO: Slow down for Panda - Maybe swap to sample at full speed then print att slower speed?
         // }
       }
       break;

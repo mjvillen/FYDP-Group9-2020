@@ -323,7 +323,7 @@ void printPosition(imu::Vector<3> position) {
 void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState) {
   // Some Quaternion matht to first rotate the quaternion to the correct axis representation around the y axis by 90 degrees
   // We then rotate the quaternion by the inverse of the predefined Panda offsets.
-  wristQuat = wristQuat * imu::Quaternion(0.99512, -1*0.046895, 0.078191, -1*0.03763).inv();
+  wristQuat = imu::Quaternion(0.99512, -1*0.046895, 0.078191, -1*0.03763).inv() * wristQuat;
 
   Serial.print(state);Serial.print(",");                    // Current operating state
   Serial.print(handPosition[0]/100, 5);Serial.print(",");   // Hand X

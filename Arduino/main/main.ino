@@ -88,14 +88,16 @@ void loop(void) {
             state = error;
             break;
           }
-          bnoShoulder.remapAxis();
+          bnoShoulder.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P0);
+          bnoShoulder.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P0);
 
           if (!bnoWrist.begin()) {
             Serial.print("No Wrist BNO055 (1) detected");
             state = error;
             break;
           }
-          bnoWrist.remapAxis();
+          bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P0);
+          bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P0);
 
           imusOn = true;
         }

@@ -317,7 +317,6 @@ public:
   void calibrate();
   void setQuaternionOffsets();
   imu::Quaternion getOffsetQuat();
-  void remapAxis();
 
 private:
   byte read8(adafruit_bno055_reg_t);

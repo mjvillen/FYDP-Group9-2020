@@ -24,6 +24,7 @@ double xPos = 0, yPos = 0, zPos = 0;
 double currXPos = 0, currYPos = 0, currZPos = 0;
 double xOffset = 0, yOffset = 0, zOffset = 0, elbowOffset = 0;
 bool zeroed = false;
+imu::Quaternion quat = imu::Quaternion(1,0,0,0);
 
 
 ////// CONSTANTS /////
@@ -96,8 +97,11 @@ void loop(void) {
             state = error;
             break;
           }
-          bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P0);
-          bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P0);
+          // Adrian's Orientation Mapping 
+//          bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P6);
+//          bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P6);
+          bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P3);
+          bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P3);
 
           imusOn = true;
         }
@@ -140,7 +144,7 @@ void loop(void) {
         while (digitalRead(mainButtonPin) == HIGH) {
           buttonPressCount++;
           if (buttonPressCount > buttonDebounce) {
-            xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
+            xPos = 0, yPos = 0, zPos = 0, quat = imu::Quaternion(1,0,0,0); // Ensure that the global position has been zeroed
             state = activeOperation;
 
             // get Offsets
@@ -196,6 +200,8 @@ void loop(void) {
           yOffset = handPosition[1];
           zOffset = handPosition[2];
 
+//          quat = wristQuat;
+
           zeroed = true;
         }
 
@@ -203,6 +209,8 @@ void loop(void) {
         currXPos = xPos + handPosition[0] - xOffset;
         currYPos = yPos + handPosition[1] - yOffset;
         currZPos = zPos + handPosition[2] - zOffset;
+
+        wristQuat = quat * wristQuat;
 
         sendToPanda(state, imu::Vector<3>(currXPos, currYPos, currZPos), wristQuat, closeButonState, openButonState);
 
@@ -216,6 +224,7 @@ void loop(void) {
             xPos = currXPos;
             yPos = currYPos;
             zPos = currZPos;
+            quat = wristQuat;
             break;
           }
         }

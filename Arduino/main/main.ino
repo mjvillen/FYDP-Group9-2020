@@ -6,8 +6,8 @@
 ///// GLOBAL VARIABLES /////
 bool calibrated = false;
 bool imusOn = false;
-bool closeButonState = false;
-bool openButonState = false;
+bool gripperButtonState = false;
+bool homeButtonState = false;
 uint16_t buttonCounter = 0;
 uint16_t buttonPressCount = 0;
 uint16_t buttonReleaseCount = 0;
@@ -24,13 +24,13 @@ double xPos = 0, yPos = 0, zPos = 0;
 double currXPos = 0, currYPos = 0, currZPos = 0;
 double xOffset = 0, yOffset = 0, zOffset = 0, elbowOffset = 0;
 bool zeroed = false;
-imu::Quaternion quat = imu::Quaternion(1,0,0,0);
+// imu::Quaternion quat = imu::Quaternion(1,0,0,0);
 
 
 ////// CONSTANTS /////
 const uint16_t SAMPLE_RATE = 10; // [ms]
 const uint16_t mainButtonPin = 10;
-const uint16_t openButtonPin = 8;
+const uint16_t gripperButtonPin = 8;
 const uint16_t closeButtonPin = 9;
 const uint16_t redLightPin= 11;
 const uint16_t greenLightPin = 12;
@@ -44,7 +44,7 @@ const uint16_t DATA_PIN = 6; // encoder
 
 ////// INSTANTIATE IMUS /////
 Adafruit_BNO055 bnoShoulder = Adafruit_BNO055(55, 0x28, &Wire);
-Adafruit_BNO055 bnoWrist = Adafruit_BNO055(55, 0x29, &Wire1);
+// Adafruit_BNO055 bnoWrist = Adafruit_BNO055(55, 0x29, &Wire1);
 
 
 ////// FUNCTION DECLARATIONS /////
@@ -52,7 +52,7 @@ double getElbowAngle();
 void RGBColor(uint8_t redValue, uint8_t greenValue, uint8_t blueValue);
 imu::Vector<3> getPosition(imu::Quaternion shoulderQuat, double elbow);
 void printPosition(imu::Vector<3> position);
-void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState);
+void sendToPanda(states state, imu::Vector<3> handPosition, bool gripperButtonState, bool homeButtonState); // , imu::Quaternion wristQuat);
 
 
 ///// SETUP /////
@@ -63,7 +63,7 @@ void setup(void) {
 
   // Button pin setup
   pinMode(mainButtonPin, INPUT);
-  pinMode(openButtonPin, INPUT);
+  pinMode(gripperButtonPin, INPUT);
   pinMode(closeButtonPin, INPUT);
 
   // LED pin setup
@@ -92,14 +92,13 @@ void loop(void) {
           bnoShoulder.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P0);
           bnoShoulder.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P0);
 
-          if (!bnoWrist.begin()) {
-            Serial.print("No Wrist BNO055 (1) detected");
-            state = error;
-            break;
-          }
-          // Adrian's Orientation Mapping 
-          bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P3);
-          bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P3);
+          // if (!bnoWrist.begin()) {
+          //   Serial.print("No Wrist BNO055 (1) detected");
+          //   state = error;
+          //   break;
+          // }
+          // bnoWrist.setAxisRemap(Adafruit_BNO055::REMAP_CONFIG_P3);
+          // bnoWrist.setAxisSign(Adafruit_BNO055::REMAP_SIGN_P3);
 
           imusOn = true;
         }
@@ -128,7 +127,7 @@ void loop(void) {
 
           // calibrate bno
           bnoShoulder.calibrate();
-          bnoWrist.calibrate();
+          // bnoWrist.calibrate();
 
           calibrated = true;
         }
@@ -142,12 +141,13 @@ void loop(void) {
         while (digitalRead(mainButtonPin) == HIGH) {
           buttonPressCount++;
           if (buttonPressCount > buttonDebounce) {
-            xPos = 0, yPos = 0, zPos = 0, quat = imu::Quaternion(1,0,0,0); // Ensure that the global position has been zeroed
+            xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
+            // quat = imu::Quaternion(1,0,0,0)
             state = activeOperation;
 
             // get Offsets
             bnoShoulder.setQuaternionOffsets();
-            bnoWrist.setQuaternionOffsets();
+            // bnoWrist.setQuaternionOffsets();
             elbowOffset = getElbowAngle();
 
             break;
@@ -168,12 +168,11 @@ void loop(void) {
         ///////////////////////////////////////////////
         buttonCounter++;
         if (buttonCounter >= buttonDebounce) {
-          closeButonState = !digitalRead(closeButtonPin);
-          openButonState = !digitalRead(openButtonPin);
+          gripperButtonState = !digitalRead(closeButtonPin);
           buttonCounter = 0;
         }
 
-//        if (digitalRead(openButtonPin) == LOW) {
+//        if (digitalRead(gripperButtonPin) == LOW) {
 //          xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
 //          xOffset = 0, yOffset = 0, zOffset = 0;
 //        }
@@ -186,7 +185,7 @@ void loop(void) {
         // tStart = micros();
 
         // Get readings
-        imu::Quaternion wristQuat = bnoWrist.getOffsetQuat();
+        // imu::Quaternion wristQuat = bnoWrist.getOffsetQuat();
 
         ///////////////////////////////////////////////
         /////////// Update Elbow Positions ////////////
@@ -203,7 +202,7 @@ void loop(void) {
           yOffset = handPosition[1];
           zOffset = handPosition[2];
 
-//          quat = wristQuat;
+          // quat = wristQuat;
 
           zeroed = true;
         }
@@ -213,9 +212,9 @@ void loop(void) {
         currYPos = yPos + handPosition[1] - yOffset;
         currZPos = zPos + handPosition[2] - zOffset;
 
-        wristQuat = quat * wristQuat;
+        // wristQuat = quat * wristQuat;
 
-        sendToPanda(state, imu::Vector<3>(currXPos, currYPos, currZPos), wristQuat, closeButonState, openButonState);
+        sendToPanda(state, imu::Vector<3>(currXPos, currYPos, currZPos), gripperButtonState, homeButtonState); // , wristQuat);
 
         // wait for button release then switch to inactive operation
         buttonReleaseCount = 0;
@@ -333,19 +332,18 @@ void printPosition(imu::Vector<3> position) {
   Serial.println(position[2], 5);
 }
 
-void sendToPanda(states state, imu::Vector<3> handPosition, imu::Quaternion wristQuat, bool closeButtonState, bool openButtonState) {
+void sendToPanda(states state, imu::Vector<3> handPosition, bool gripperButtonState, bool homeButtonState) { //, imu::Quaternion wristQuat) {
   // Some Quaternion matht to first rotate the quaternion to the correct axis representation around the y axis by 90 degrees
   // We then rotate the quaternion by the inverse of the predefined Panda offsets.
-  wristQuat = imu::Quaternion(0.99512, -1*0.046895, 0.078191, -1*0.03763).inv() * wristQuat;
+  // wristQuat = imu::Quaternion(0.99512, -1*0.046895, 0.078191, -1*0.03763).inv() * wristQuat;
 
-  Serial.print(state);Serial.print(",");                    // Current operating state
   Serial.print(handPosition[0]/100, 5);Serial.print(",");   // Hand X
   Serial.print(handPosition[1]/100, 5);Serial.print(",");   // Hand Y
   Serial.print(handPosition[2]/100, 5);Serial.print(",");   // Hand Z
-  Serial.print(wristQuat.w());Serial.print(",");            // Wrist Quat w
-  Serial.print(wristQuat.x());Serial.print(",");            // Wrist Quat x
-  Serial.print(wristQuat.y());Serial.print(",");            // Wrist Quat y
-  Serial.print(wristQuat.z());Serial.print(",");            // Wrist Quat z
-  Serial.print(closeButonState);Serial.print(",");          // Close button state - true -> pressed / false -> not pressed
-  Serial.println(openButonState);                           // Open button state - true -> pressed / false -> not pressed
+  // Serial.print(wristQuat.w());Serial.print(",");            // Wrist Quat w
+  // Serial.print(wristQuat.x());Serial.print(",");            // Wrist Quat x
+  // Serial.print(wristQuat.y());Serial.print(",");            // Wrist Quat y
+  // Serial.print(wristQuat.z());Serial.print(",");            // Wrist Quat z
+  Serial.print(gripperButtonState);Serial.print(",");          // gripper button state - true -> pressed / false -> not pressed
+  Serial.println(homeButtonState);                           // Open button state - true -> pressed / false -> not pressed
 }

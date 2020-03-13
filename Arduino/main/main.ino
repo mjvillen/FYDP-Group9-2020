@@ -166,8 +166,13 @@ void loop(void) {
         ///////////////////////////////////////////////
         ////////////// Check Panda State //////////////
         ///////////////////////////////////////////////
-        // TODO: Adrians code
-
+        if (Serial.available() > 0) {
+          if (Serial.read() == 0) {
+            state = error;
+            Serial.println("Panda Error: Force Threshold Exceeded");
+            break;
+          }
+        }
 
 
         ///////////////////////////////////////////////
@@ -216,7 +221,7 @@ void loop(void) {
           gripperButtonState = !digitalRead(gripperButtonPin);
 
           if (digitalRead(homeButtonPin) == LOW) {
-            xPos = 0, yPos = 0, zPos = 0; // Ensure that the global position has been zeroed
+            xPos = 0, yPos = 0, zPos = 0;
             xOffset = handPosition[0], yOffset = handPosition[1], zOffset = handPosition[2];
           }
           buttonCounter = 0;
